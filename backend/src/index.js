@@ -185,17 +185,23 @@ app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) 
 
             console.log('Processing file:', absolutePath, 'for candidate:', candidate.id);
 
-            try {
-                const resp = await axios.post(`${process.env.PARSER_SERVICE_URL.replace(/\/$/, '')}/process`, {
-                    jobId,
-                    candidateId: candidate.id,
-                    filePath: absolutePath,
-                    filename: f.filename
-                }, { timeout: 120000 });
+            const fileData = fs.readFileSync(absolutePath, { encoding: "base64" });
 
-                console.log('Parser response for candidate', candidate.id, ':', resp.data);
+            try {
+                const resp = await axios.post(
+                    `${process.env.PARSER_SERVICE_URL.replace(/\/$/, '')}/process`,
+                    {
+                        jobId,
+                        candidateId: candidate.id,
+                        filename: f.filename,
+                        fileData // ✅ base64 string
+                    },
+                    { timeout: 120000 }
+                );
+
+                console.log("Parser response for candidate", candidate.id, ":", resp.data);
             } catch (err) {
-                console.error('Parser error for candidate', candidate.id, err?.response?.data || err.message);
+                console.error("Parser error for candidate", candidate.id, err?.response?.data || err.message);
             }
         }
 

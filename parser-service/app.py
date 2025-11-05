@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import os, re, json
+import os, re, json, base64, tempfile
 import fitz
 import docx
 import spacy
@@ -66,7 +66,6 @@ def extract_name_email(text):
                 break
 
     return candidate_name, email
-
 
 
 def db_connect():
@@ -183,20 +182,32 @@ def process():
     data = request.json
     jobId = data.get("jobId")
     candidateId = data.get("candidateId")
-    filePath = data.get("filePath")
+    filename = data.get("filename")
+    file_data = data.get("fileData")  # base64 string
 
-    if not (jobId and candidateId and filePath):
+    if not (jobId and candidateId and file_data and filename):
         return jsonify({"error": "missing parameters"}), 400
 
-    filePathResolved = (
-        filePath if os.path.isabs(filePath) else os.path.join(UPLOAD_DIR, os.path.basename(filePath))
-    )
-    if not os.path.exists(filePathResolved):
-        return jsonify({"error": "file not found", "path": filePathResolved}), 400
+    # Decode base64 and save temporarily
+    try:
+        temp_path = os.path.join(tempfile.gettempdir(), filename)
+        with open(temp_path, "wb") as f:
+            f.write(base64.b64decode(file_data))
+    except Exception as e:
+        return jsonify({"error": "failed to decode file", "details": str(e)}), 400
 
+    filePathResolved = temp_path
     print(f"Processing candidate {candidateId}, file {filePathResolved}")
+
+    # Extract text
     text = extract_text(filePathResolved)
     name, email = extract_name_email(text)
+
+    # Cleanup temporary file
+    try:
+        os.remove(filePathResolved)
+    except Exception:
+        pass
 
     conn = db_connect()
     cur = conn.cursor()
