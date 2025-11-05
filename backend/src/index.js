@@ -1,4 +1,3 @@
-// backend/src/index.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -12,6 +11,7 @@ const axios = require('axios');
 const uploadDir = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+// Multer setup (stores uploaded resumes locally)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
@@ -22,7 +22,16 @@ const upload = multer({
 });
 
 const app = express();
-app.use(cors());
+
+// ---------- CORS ----------
+app.use(cors({
+    origin: [
+        'https://your-frontend.vercel.app',  // ⬅️ Replace with your real Vercel URL
+        'http://localhost:5173'              // For local dev testing
+    ],
+    credentials: true
+}));
+
 app.use(express.json());
 
 // ---------- DATABASE ----------
@@ -38,15 +47,18 @@ const pool = new Pool({
     }
 });
 
-// ---------- JOBS ENDPOINTS ----------
+// ---------- ROOT ROUTE (Fix "Cannot GET /") ----------
+app.get('/', (req, res) => {
+    res.send('✅ Resume Checker backend is running!');
+});
 
-// Create job
+// ---------- JOBS ENDPOINTS ----------
 app.post('/api/jobs', async (req, res) => {
     const { title, description, criteria, location, experience_required } = req.body;
     try {
         const result = await pool.query(
             `INSERT INTO jobs (title, description, criteria, location, experience_required)
-       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+             VALUES ($1,$2,$3,$4,$5) RETURNING *`,
             [title, description, criteria, location, experience_required]
         );
         res.json(result.rows[0]);
@@ -56,14 +68,13 @@ app.post('/api/jobs', async (req, res) => {
     }
 });
 
-// Get all jobs
 app.get('/api/jobs', async (req, res) => {
     try {
         const result = await pool.query(`
-      SELECT id, title, description, criteria, created_at, location, experience_required
-      FROM jobs
-      ORDER BY created_at DESC
-    `);
+            SELECT id, title, description, criteria, created_at, location, experience_required
+            FROM jobs
+            ORDER BY created_at DESC
+        `);
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching jobs:', err);
@@ -72,16 +83,14 @@ app.get('/api/jobs', async (req, res) => {
 });
 
 // ---------- CANDIDATES ENDPOINTS ----------
-
-// Get all candidates (for Landing.jsx)
 app.get('/api/candidates', async (req, res) => {
     try {
         const result = await pool.query(`
-      SELECT c.*, j.title AS job_title
-      FROM candidates c
-      LEFT JOIN jobs j ON c.job_id = j.id
-      ORDER BY c.created_at DESC
-    `);
+            SELECT c.*, j.title AS job_title
+            FROM candidates c
+            LEFT JOIN jobs j ON c.job_id = j.id
+            ORDER BY c.created_at DESC
+        `);
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching candidates:', err);
@@ -89,7 +98,6 @@ app.get('/api/candidates', async (req, res) => {
     }
 });
 
-// Get candidates for specific job
 app.get('/api/jobs/:jobId/candidates', async (req, res) => {
     const jobId = req.params.jobId;
     try {
@@ -104,13 +112,12 @@ app.get('/api/jobs/:jobId/candidates', async (req, res) => {
     }
 });
 
-// Create a candidate manually (optional)
 app.post('/api/candidates', async (req, res) => {
     const { name, job_id, score, filename } = req.body;
     try {
         const result = await pool.query(
             `INSERT INTO candidates (name, job_id, score, filename)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
+             VALUES ($1, $2, $3, $4) RETURNING *`,
             [name || null, job_id, score || null, filename || null]
         );
         res.json(result.rows[0]);
@@ -120,7 +127,6 @@ app.post('/api/candidates', async (req, res) => {
     }
 });
 
-// Re-evaluate candidate
 app.post('/api/candidates/:id/reeval', async (req, res) => {
     const id = req.params.id;
     try {
@@ -142,7 +148,7 @@ app.post('/api/candidates/:id/reeval', async (req, res) => {
     }
 });
 
-// ---------- FILE UPLOAD (Two-step) ----------
+// ---------- FILE UPLOAD ----------
 app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) => {
     const jobId = req.params.jobId;
     const files = req.files;
@@ -152,7 +158,6 @@ app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) 
     try {
         await client.query('BEGIN');
 
-        // Step 1: Insert minimal candidate rows
         const insertedRows = [];
         for (const f of files) {
             const result = await client.query(
@@ -164,11 +169,10 @@ app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) 
 
         await client.query('COMMIT');
 
-        // Step 2: Call parser service
         for (let i = 0; i < files.length; i++) {
             const f = files[i];
             const candidate = insertedRows[i];
-            const absolutePath = f.path; // already absolute
+            const absolutePath = f.path;
 
             console.log('Processing file:', absolutePath, 'for candidate:', candidate.id);
 
