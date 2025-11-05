@@ -1,0 +1,388 @@
+/* 🌫️ Page background */
+
+
+/* Blur background when modal is open */
+.blur-background {
+    filter: blur(6px);
+    pointer-events: none;
+    /* disable clicks behind modal */
+    transition: filter 0.3s ease;
+}
+
+/* Optional: make sure modal sits on top of everything */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    /* ✅ ensures it's above everything */
+}
+
+
+
+
+.candidates-page {
+    position: relative;
+    min-height: 100vh;
+    width: 105%;
+    padding: 20px;
+    background: radial-gradient(circle at 50% 20%, #0a1016 0%, #080808 90%);
+    color: #e5e5e5;
+    font-family: "Inter", sans-serif;
+    overflow: hidden;
+    height: 100vh;
+
+}
+
+.candidates-page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #e5eaf0;
+    margin: 20px 40px 0 40px;
+    z-index: 2;
+    position: relative;
+}
+
+.candidates-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 25% 35%, rgba(80, 130, 180, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 70% 80%, rgba(40, 80, 130, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+    filter: blur(25px) contrast(130%);
+    opacity: 0.55;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 🧩 Layout */
+.candidates-layout {
+    display: flex;
+    height: 100%;
+    gap: 40px;
+    padding: 30px 40px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 🧱 Sidebar */
+.candidates-sidebar {
+    flex: 0 0 30%;
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(60, 100, 160, 0.06), rgba(10, 20, 35, 0.6));
+    border: 1px solid rgba(80, 130, 180, 0.25);
+    box-shadow:
+        inset 0 1px 2px rgba(120, 160, 210, 0.15),
+        inset 0 -1px 2px rgba(40, 60, 100, 0.1),
+        0 4px 20px rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(0.5px);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    margin-bottom: 100px;
+}
+
+/* Title */
+.sidebar-header {
+    background: linear-gradient(145deg, rgba(70, 120, 180, 0.08), rgba(20, 35, 60, 0.05));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    box-shadow:
+        inset 0 1px 3px rgba(255, 255, 255, 0.25),
+        0 3px 15px rgba(0, 0, 0, 0.75);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Jobs List */
+.sidebar-jobs-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+/* Job Card */
+.sidebar-job-item {
+    position: relative;
+    min-width: 250px;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+
+    background: linear-gradient(145deg, rgba(60, 100, 160, 0.05), rgba(10, 20, 35, 0.04));
+    border: 1px solid rgba(80, 130, 180, 0.25);
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.15),
+        inset 0 -1px 2px rgba(0, 50, 100, 0.1),
+        0 3px 15px rgba(0, 0, 0, 0.9);
+    overflow: hidden;
+}
+
+.sidebar-job-item:hover {
+    transform: translateY(-4px);
+    background: linear-gradient(145deg, rgba(80, 130, 190, 0.1), rgba(20, 35, 60, 0.08));
+    box-shadow:
+        inset 0 1px 3px rgba(120, 180, 240, 0.15),
+        0 0 8px rgba(80, 130, 190, 0.18);
+}
+
+.sidebar-job-item {
+    border-left: 15px solid #4a90e2;
+}
+
+.sidebar-job-item::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 90px;
+    height: 90px;
+    background: rgba(74, 144, 226, 0.2);
+    border-radius: 50%;
+    filter: blur(25px);
+    pointer-events: none;
+}
+
+/* Color variations */
+.sidebar-jobs-list>div:nth-child(4n + 1) .sidebar-job-item {
+    border-left-color: #4a90e2;
+}
+
+.sidebar-jobs-list>div:nth-child(4n + 1) .sidebar-job-item::before {
+    background: rgba(74, 144, 226, 0.25);
+}
+
+.sidebar-jobs-list>div:nth-child(4n + 2) .sidebar-job-item {
+    border-left-color: #e74c3c;
+}
+
+.sidebar-jobs-list>div:nth-child(4n + 2) .sidebar-job-item::before {
+    background: rgba(231, 76, 60, 0.25);
+}
+
+
+.sidebar-jobs-list>div:nth-child(4n + 3) .sidebar-job-item {
+    border-left-color: #50e3c2;
+}
+
+.sidebar-jobs-list>div:nth-child(4n + 3) .sidebar-job-item::before {
+    background: rgba(80, 227, 194, 0.25);
+}
+
+.sidebar-jobs-list>div:nth-child(4n + 4) .sidebar-job-item {
+    border-left-color: #f5a623;
+}
+
+.sidebar-jobs-list>div:nth-child(4n + 4) .sidebar-job-item::before {
+    background: rgba(245, 166, 35, 0.25);
+}
+
+/* Active */
+.sidebar-job-item.active {
+    border-left-width: 20px;
+    filter: brightness(1.05);
+    background: linear-gradient(145deg, rgba(80, 130, 190, 0.15), rgba(15, 25, 40, 0.12));
+    box-shadow:
+        0 0 10px rgba(90, 140, 200, 0.2),
+        inset 0 0 6px rgba(80, 130, 190, 0.25);
+}
+
+/* Text */
+.sidebar-job-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #e7edf5;
+}
+
+.sidebar-job-date {
+    font-size: 12px;
+    color: #a1a1a1;
+    margin-top: 4px;
+}
+
+.sidebar-job-tags {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.sidebar-job-tags .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #cfd7e3;
+    backdrop-filter: blur(6px);
+}
+
+.tag-icon {
+    width: 25px;
+    height: 25px;
+    color: #9abaf0;
+    flex-shrink: 0;
+    opacity: 0.9;
+    transition: transform 0.2s ease;
+    background: none;
+    border: none;
+}
+
+.sidebar-job-tags .tag:hover .tag-icon {
+    transform: scale(1.1);
+}
+
+
+.sidebar-job-tags span {
+    background: linear-gradient(145deg, rgba(70, 120, 180, 0.08), rgba(20, 35, 60, 0.05));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.2),
+        0 2px 6px rgba(0, 0, 0, 0.6);
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #d7e2f0;
+    backdrop-filter: blur(0.5px);
+    flex: 1;
+    /* make both take equal width */
+    text-align: center;
+    /* center text nicely */
+    min-width: 0;
+    /* prevents overflow issues */
+}
+
+/* Divider */
+.sidebar-divider {
+    height: 1px;
+    background: rgba(90, 130, 180, 0.2);
+    margin: 8px 0;
+}
+
+/* 👥 Right Content */
+/* 🔹 Candidates Table Section */
+.candidates-table-section {
+    border-radius: 20px;
+    padding: 24px;
+    background: linear-gradient(145deg, rgba(60, 100, 160, 0.07), rgba(15, 25, 45, 0.04));
+    border: 1px solid rgba(90, 130, 180, 0.25);
+    box-shadow:
+        inset 0 1px 3px rgba(100, 160, 220, 0.15),
+        inset 0 -1px 3px rgba(40, 60, 100, 0.1),
+        0 4px 25px rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(0.5px);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 95%;
+    /* increase width */
+    max-width: 1200px;
+    /* optional: limit max width */
+    margin: 0 auto;
+    margin-bottom: 100px;
+    overflow: hidden;
+}
+
+/* Header */
+.candidates-table-header {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr 1fr;
+    align-items: center;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: #f5f5f5;
+    font-size: 15px;
+    background: linear-gradient(145deg, rgba(70, 120, 180, 0.08), rgba(20, 35, 60, 0.05));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    border-radius: 12px 12px 0 0;
+    box-shadow:
+        inset 0 1px 3px rgba(255, 255, 255, 0.25),
+        0 3px 15px rgba(0, 0, 0, 0.75);
+}
+
+/* Scrollable candidates list */
+.candidates-table-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(80, 130, 180, 0.12);
+    height: calc(55vh - 100px);
+    max-height: 10px;
+    min-height: 500px;
+    overflow-y: auto;
+    border-radius: 0 0 12px 12px;
+
+}
+
+/* Hide scrollbar */
+.candidates-table-list::-webkit-scrollbar {
+    display: none;
+}
+
+/* Each candidate row */
+.candidates-table-row {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr 1fr;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(80, 130, 180, 0.1);
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    background: linear-gradient(145deg, rgba(60, 100, 160, 0.04), rgba(20, 35, 60, 0.02));
+    color: #e5e9f2;
+}
+
+.candidates-table-row>div {
+    pointer-events: none;
+    /* children won't block the row click */
+}
+
+/* Hover effect */
+.candidates-table-row:hover {
+    background: linear-gradient(145deg, rgba(80, 130, 190, 0.1), rgba(20, 35, 60, 0.05));
+    box-shadow:
+        inset 0 1px 3px rgba(120, 180, 240, 0.15),
+        0 0 6px rgba(80, 130, 190, 0.12);
+}
+
+/* Empty state */
+.no-candidates-row {
+    padding: 12px 20px;
+    color: #a3aab5;
+    font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-height: 700px) {
+    .candidates-table-list {
+        height: calc(40vh - 60px);
+    }
+}
+
+@media (max-width: 800px) {
+    .candidates-table-section {
+        padding: 16px;
+    }
+
+    .candidates-table-header,
+    .candidates-table-row {
+        grid-template-columns: 1fr 0.6fr 1fr;
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+}

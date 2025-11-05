@@ -1,0 +1,155 @@
+/* 🌌 Dimmed Backdrop */
+.score-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 15, 25, 0.55);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    z-index: 100;
+}
+
+.score-modal-backdrop.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 🧩 Sliding Side Panel */
+.score-modal-panel {
+    position: absolute;
+    top: 0%;
+    right: 0;
+    height: 95%;
+    width: 420px;
+    border-radius: 20px 0 0 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.3, 1);
+
+    /* Liquid glass background */
+    background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    box-shadow:
+        inset 0 1px 3px rgba(120, 160, 220, 0.15),
+        inset 0 -1px 3px rgba(40, 60, 100, 0.1),
+        0 8px 30px rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(6px) saturate(130%);
+}
+
+/* ✨ Slide Animation */
+.score-modal-panel.slide-in {
+    transform: translateX(0);
+}
+
+.score-modal-panel.slide-out {
+    transform: translateX(100%);
+}
+
+/* 💠 Header */
+.score-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(90, 130, 180, 0.25);
+}
+
+.score-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #e7edf5;
+}
+
+.close-btn {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    color: #b8c4d6;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #9abaf0;
+}
+
+/* 🎚️ Sliders */
+.slider-row {
+    margin-bottom: 18px;
+}
+
+.slider-row label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #b8c4d6;
+}
+
+.slider-row input[type="range"] {
+    width: 100%;
+    accent-color: #4a90e2;
+}
+
+
+/* ⚙️ Footer Buttons */
+.score-modal-actions {
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid rgba(90, 130, 180, 0.25);
+}
+
+.reset-btn,
+.save-btn {
+    border: none;
+    padding: 15px 30px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+
+/* Highlighted main button */
+.reset-btn,
+.save-btn {
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.25), rgba(40, 80, 160, 0.3));
+    border: 1px solid rgba(74, 144, 226, 0.5);
+    color: #edf1f6;
+    box-shadow:
+        0 0 10px rgba(74, 144, 226, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.reset-btn:hover,
+.save-btn:hover {
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.35), rgba(40, 80, 160, 0.4));
+    box-shadow:
+        0 0 12px rgba(74, 144, 226, 0.35),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* ✨ Optional subtle entrance glow */
+.score-modal-panel::before {
+    content: "";
+    position: absolute;
+    top: -5%;
+    left: -10%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(100, 150, 255, 0.12), transparent 70%);
+    filter: blur(25px);
+    pointer-events: none;
+}

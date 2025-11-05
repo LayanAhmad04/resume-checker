@@ -1,0 +1,219 @@
+/* 🌌 Dimmed Backdrop */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 15, 25, 0.55);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    z-index: 1000;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 🧩 Sliding Right Panel */
+.modal-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 95%;
+    width: 420px;
+    border-radius: 20px 0 0 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.3, 1);
+    /* Liquid glass background */
+    background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    box-shadow:
+        inset 0 1px 3px rgba(120, 160, 220, 0.15),
+        inset 0 -1px 3px rgba(40, 60, 100, 0.1),
+        0 8px 30px rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(6px) saturate(130%);
+    bottom: 20px;
+    height: calc(95% - 20px);
+    padding-bottom: 30px;
+}
+
+.modal-panel.closing {
+    transform: translateX(100%);
+}
+
+.modal-overlay.open .modal-panel {
+    transform: translateX(0);
+}
+
+/* 💠 Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid rgba(90, 130, 180, 0.25);
+}
+
+.modal-info {
+    flex: 1;
+}
+
+.candidate-name {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e7edf5;
+}
+
+.candidate-job {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #b8c4d6;
+}
+
+/* Score badge */
+.modal-score {
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.25), rgba(40, 80, 160, 0.3));
+    border: 1px solid rgba(74, 144, 226, 0.5);
+    color: #edf1f6;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 0 10px rgba(74, 144, 226, 0.25);
+}
+
+/* ❌ Close Button */
+.close-btn {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    color: #b8c4d6;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #9abaf0;
+}
+
+/* 📦 Content Box */
+.modal-content-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(90, 130, 180, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 8px;
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05);
+}
+
+.modal-content-box p {
+    margin-bottom: 12px;
+    color: #dbe4f3;
+    line-height: 1.45;
+}
+
+.candidate-email {
+    font-size: 0.85rem;
+    color: #c7ccd4;
+    /* optional – matches your site aesthetic */
+    margin-bottom: 10px;
+}
+
+
+/* 📊 Score Breakdown */
+.score-breakdown {
+    margin-top: 18px;
+}
+
+.score-breakdown table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: #c9d5e8;
+}
+
+.score-breakdown th,
+.score-breakdown td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px;
+    text-align: left;
+}
+
+.score-breakdown th {
+    font-weight: 600;
+    color: #9abaf0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e7edf5;
+    margin-bottom: -10px;
+}
+
+.section-title .icon {
+    width: 24px;
+    height: 24px;
+    color: #9abaf0;
+    flex-shrink: 0;
+}
+
+
+/* ⚙️ Footer Buttons */
+.modal-actions {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid rgba(90, 130, 180, 0.25);
+}
+
+.btn {
+    border: none;
+    padding: 14px 28px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.25s ease;
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.25), rgba(40, 80, 160, 0.3));
+    border: 1px solid rgba(74, 144, 226, 0.5);
+    color: #edf1f6;
+    box-shadow:
+        0 0 10px rgba(74, 144, 226, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.btn:hover {
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.35), rgba(40, 80, 160, 0.4));
+    box-shadow:
+        0 0 12px rgba(74, 144, 226, 0.35),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* ✨ Soft entrance glow */
+.modal-panel::before {
+    content: "";
+    position: absolute;
+    top: -5%;
+    left: -10%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(100, 150, 255, 0.12), transparent 70%);
+    filter: blur(25px);
+    pointer-events: none;
+}

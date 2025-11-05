@@ -1,0 +1,10 @@
+flask
+psycopg2-binary
+python-docx
+PyMuPDF
+openai
+requests
+tqdm
+python-dotenv
+spacy
+ftfy

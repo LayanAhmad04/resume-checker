@@ -1,0 +1,272 @@
+from flask import Flask, request, jsonify
+import os, re, json
+import fitz
+import docx
+import spacy
+import psycopg2
+from config import DB_DSN, OPENAI_KEY, PARSER_PORT
+from openai import OpenAI
+
+# -------- SETUP --------
+client = OpenAI(api_key=OPENAI_KEY)
+nlp = spacy.load("en_core_web_sm")
+
+app = Flask(__name__)
+
+UPLOAD_DIR = os.path.abspath(
+    os.getenv("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "..", "uploads"))
+)
+print("Parser service UPLOAD_DIR:", UPLOAD_DIR)
+
+
+# -------- TEXT EXTRACTION --------
+def extract_text_from_pdf(path):
+    doc = fitz.open(path)
+    return "\n".join([p.get_text() or "" for p in doc])
+
+
+def extract_text_from_docx(path):
+    doc = docx.Document(path)
+    return "\n".join([p.text for p in doc.paragraphs if p.text])
+
+
+def extract_text(path):
+    try:
+        low = path.lower()
+        if low.endswith(".pdf"):
+            return extract_text_from_pdf(path)
+        elif low.endswith(".docx") or low.endswith(".doc"):
+            return extract_text_from_docx(path)
+        else:
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+    except Exception as e:
+        print("extract_text error:", e)
+        return ""
+
+
+def extract_name_email(text):
+    emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
+    email = emails[0] if emails else None
+
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    candidate_name = None
+
+    # First, look for ALL CAPS names (most CVs do this)
+    for line in lines[:20]:
+        if re.match(r"^[A-Z\s]{3,}$", line) and 2 <= len(line.split()) <= 4:
+            candidate_name = line.title()
+            break
+
+    # If not found, fallback to typical capitalized first + last name
+    if not candidate_name:
+        for line in lines[:15]:
+            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", line):
+                candidate_name = line.strip()
+                break
+
+    return candidate_name, email
+
+
+
+def db_connect():
+    return psycopg2.connect(
+        host=DB_DSN["host"],
+        port=DB_DSN["port"],
+        user=DB_DSN["user"],
+        password=DB_DSN["password"],
+        dbname=DB_DSN["database"],
+    )
+
+
+# -------- OPENAI SCORING --------
+def call_openai_subscores_and_justification(job_description: str, resume_text: str, criteria: dict):
+    weights = {}
+    total_raw = 0.0
+    for k, v in (criteria or {}).items():
+        try:
+            total_raw += float(v)
+        except Exception:
+            total_raw += 0.0
+
+    if total_raw <= 0:
+        n = len(criteria) or 1
+        for k in (criteria or {}):
+            weights[k] = 1.0 / n
+    else:
+        for k, v in (criteria or {}).items():
+            weights[k] = float(v) / total_raw
+
+    prompt = f"""
+You are an objective HR scoring assistant. Given the job description and candidate resume, produce ONLY valid JSON matching this format:
+
+{{
+  "subscores": {{
+    "<criterion>": {{ "score": 0.00, "reason": "short justification" }}
+  }},
+  "contributions": {{
+    "<criterion>": 0.00
+  }},
+  "total_score_out_of_10": 0.00,
+  "overall_justification": "1–3 sentences summarizing final score reasoning."
+}}
+
+Rules:
+- Use each provided criterion name exactly.
+- Score: 0.00–1.00 (two decimals)
+- contribution = score * normalized_weight * 10
+- total_score_out_of_10 = sum(contributions)
+- Return valid JSON only.
+
+Job description:
+\"\"\"{job_description}\"\"\"
+
+Resume (truncated):
+\"\"\"{resume_text[:7000]}\"\"\"
+
+Normalized weights:
+{json.dumps(weights, indent=2)}
+"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a concise, objective HR scoring assistant that outputs only valid JSON.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.0,
+            max_tokens=700,
+        )
+
+        txt = response.choices[0].message.content
+        first, last = txt.find("{"), txt.rfind("}")
+        if first == -1 or last == -1 or last < first:
+            raise ValueError("No JSON found in response")
+
+        j = json.loads(txt[first:last + 1])
+        subs = {}
+        contribs = {}
+
+        for k in weights.keys():
+            entry = j.get("subscores", {}).get(k)
+            s = float(entry["score"]) if entry and "score" in entry else 0.0
+            reason = entry.get("reason", "") if entry else ""
+            s = max(0.0, min(1.0, round(s, 2)))
+            subs[k] = {"score": s, "reason": reason}
+            contribs[k] = round(s * weights[k] * 10, 2)
+
+        total = round(sum(contribs.values()), 2)
+        overall = j.get("overall_justification", "")
+        return subs, contribs, total, overall
+
+    except Exception as e:
+        print("OpenAI scoring/parsing error:", e)
+        subs_fallback, contribs_fallback = {}, {}
+        for k, w in (criteria or {}).items():
+            subs_fallback[k] = {"score": 0.5, "reason": "Fallback neutral score"}
+            contribs_fallback[k] = round(0.5 * (float(w) / (total_raw or 1)) * 10, 2)
+        total_fallback = round(sum(contribs_fallback.values()), 2)
+        return (
+            subs_fallback,
+            contribs_fallback,
+            total_fallback,
+            "Fallback justification: OpenAI failed or invalid response.",
+        )
+
+
+# -------- PROCESS ROUTE --------
+@app.route("/process", methods=["POST"])
+def process():
+    data = request.json
+    jobId = data.get("jobId")
+    candidateId = data.get("candidateId")
+    filePath = data.get("filePath")
+
+    if not (jobId and candidateId and filePath):
+        return jsonify({"error": "missing parameters"}), 400
+
+    filePathResolved = (
+        filePath if os.path.isabs(filePath) else os.path.join(UPLOAD_DIR, os.path.basename(filePath))
+    )
+    if not os.path.exists(filePathResolved):
+        return jsonify({"error": "file not found", "path": filePathResolved}), 400
+
+    print(f"Processing candidate {candidateId}, file {filePathResolved}")
+    text = extract_text(filePathResolved)
+    name, email = extract_name_email(text)
+
+    conn = db_connect()
+    cur = conn.cursor()
+    cur.execute("SELECT description, criteria FROM jobs WHERE id=%s", (jobId,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "job not found"}), 404
+    job_description, criteria_json = row
+    criteria = json.loads(criteria_json) if isinstance(criteria_json, str) else criteria_json or {}
+
+    try:
+        subscores, contributions, total_out_of_10, overall_just = call_openai_subscores_and_justification(
+            job_description, text, criteria
+        )
+    except Exception as e:
+        print("OpenAI helper failed:", e)
+        subscores = {k: {"score": 0.5, "reason": "Fallback scoring"} for k in criteria.keys()}
+        contributions = {k: 0.5 for k in criteria.keys()}
+        total_out_of_10 = 5.0
+        overall_just = "Fallback justification."
+
+    score = total_out_of_10
+
+    try:
+        cur.execute(
+            """
+            UPDATE candidates
+            SET name=%s,
+                email=%s,
+                raw_text=%s,
+                parsed_data=%s,
+                subscores=%s,
+                score=%s,
+                justification=%s,
+                processed_at=NOW()
+            WHERE id=%s
+        """,
+            (
+                name,
+                email,
+                text[:10000],
+                json.dumps({"name": name, "email": email}),
+                json.dumps(subscores),
+                score,
+                json.dumps({"overall": overall_just, "contributions": contributions}),
+                candidateId,
+            ),
+        )
+        conn.commit()
+    except Exception as e:
+        print("DB update failed:", e)
+        conn.rollback()
+        conn.close()
+        return jsonify({"error": "db update failed", "details": str(e)}), 500
+
+    conn.close()
+    return jsonify(
+        {
+            "ok": True,
+            "candidateId": candidateId,
+            "name": name,
+            "email": email,
+            "score": score,
+            "subscores": subscores,
+            "justification": overall_just,
+            "contributions": contributions,
+        }
+    )
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=PARSER_PORT, debug=True)

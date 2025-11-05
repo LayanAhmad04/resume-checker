@@ -1,0 +1,170 @@
+/* 🌌 Backdrop */
+.upload-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 15, 25, 0.55);
+    backdrop-filter: blur(8px) saturate(140%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.upload-modal-backdrop.show {
+    opacity: 1;
+}
+
+/* 🧩 Panel */
+.upload-modal-panel {
+    width: 420px;
+    background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    box-shadow:
+        inset 0 1px 3px rgba(120, 160, 220, 0.15),
+        inset 0 -1px 3px rgba(40, 60, 100, 0.1),
+        0 8px 30px rgba(0, 0, 0, 0.85);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    color: #e5e5e5;
+    font-family: "Inter", sans-serif;
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.3, 1);
+}
+
+/* ✨ Animate in */
+.upload-modal-panel.slide-in {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.upload-modal-panel.slide-out {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+}
+
+/* Titles */
+.upload-modal-title {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #e7edf5;
+}
+
+.upload-modal-subtitle {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: #b8c4d6;
+}
+
+/* File input */
+.upload-modal-input {
+    display: flex;
+    justify-content: center;
+    /* centers the upload button horizontally */
+    align-items: center;
+    width: 95%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(90, 130, 180, 0.25);
+    background: linear-gradient(145deg, rgba(70, 120, 180, 0.06), rgba(15, 25, 40, 0.05));
+    color: #edf1f6;
+    font-size: 14px;
+    margin-bottom: 8px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.upload-modal-input:hover,
+.upload-modal-input:focus {
+    box-shadow: 0 0 6px rgba(100, 160, 240, 0.15),
+        inset 0 0 3px rgba(90, 130, 180, 0.2);
+    border-color: rgba(100, 160, 240, 0.4);
+}
+
+/* Notes & file list */
+.upload-modal-note {
+    font-size: 12px;
+    color: #8799b5;
+    margin-bottom: 10px;
+}
+
+.upload-modal-file-list {
+    max-height: 100px;
+    overflow-y: auto;
+    text-align: left;
+    padding-left: 16px;
+    margin: 0 0 10px 0;
+    list-style: disc;
+    font-size: 13px;
+    color: #edf1f6;
+}
+
+.upload-modal-actions {
+    display: flex;
+    justify-content: center;
+    /* centers the upload button horizontally */
+    align-items: center;
+    margin-top: 20px;
+}
+
+.upload-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: #aebad0;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.upload-modal-close:hover {
+    color: #e4eaf5;
+    transform: scale(1.1);
+}
+
+/* Make sure panel is positioned relative for the X to anchor */
+.upload-modal-panel {
+    position: relative;
+    width: 420px;
+    background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
+    border: 1px solid rgba(90, 130, 180, 0.3);
+    box-shadow:
+        inset 0 1px 3px rgba(120, 160, 220, 0.15),
+        inset 0 -1px 3px rgba(40, 60, 100, 0.1),
+        0 8px 30px rgba(0, 0, 0, 0.85);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    color: #e5e5e5;
+    font-family: "Inter", sans-serif;
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.3, 1);
+}
+
+.upload-btn {
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.25), rgba(40, 80, 160, 0.3));
+    border: 1px solid rgba(74, 144, 226, 0.5);
+    color: #edf1f6;
+    border-radius: 12px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-btn:hover {
+    background: linear-gradient(145deg, rgba(74, 144, 226, 0.35), rgba(40, 80, 160, 0.4));
+}
