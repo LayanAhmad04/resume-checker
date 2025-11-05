@@ -24,11 +24,20 @@ const upload = multer({
 const app = express();
 
 // ---------- CORS ----------
+const allowedOrigins = [
+    'https://resume-checker-gamma.vercel.app', // ✅ your frontend on Vercel
+    'http://localhost:5173'                    // for local testing
+];
+
 app.use(cors({
-    origin: [
-        'https://your-frontend.vercel.app',  // ⬅️ Replace with your real Vercel URL
-        'http://localhost:5173'              // For local dev testing
-    ],
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.log('❌ Blocked by CORS:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
@@ -47,7 +56,7 @@ const pool = new Pool({
     }
 });
 
-// ---------- ROOT ROUTE (Fix "Cannot GET /") ----------
+// ---------- ROOT ROUTE ----------
 app.get('/', (req, res) => {
     res.send('✅ Resume Checker backend is running!');
 });
