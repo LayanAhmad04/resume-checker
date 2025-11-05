@@ -31,7 +31,11 @@ const pool = new Pool({
     port: parseInt(process.env.DB_PORT, 10),
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    ssl: {
+        require: true,
+        rejectUnauthorized: false
+    }
 });
 
 // ---------- JOBS ENDPOINTS ----------
