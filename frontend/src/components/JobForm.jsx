@@ -25,7 +25,6 @@ export default function JobForm({ open = true, onCreated, onClose }) {
             document.body.style.overflow = "hidden";
         } else {
             document.body.style.overflow = "";
-            // wait for animation to finish before unmount/hide
             setTimeout(() => setVisible(false), 300);
         }
         return () => (document.body.style.overflow = "");
@@ -35,12 +34,14 @@ export default function JobForm({ open = true, onCreated, onClose }) {
         setWeights((prev) => ({ ...prev, [key]: Number(val) }));
     }
 
+    // create new job entry
     async function createJob() {
         const total = Object.values(weights).reduce((a, b) => a + b, 0);
         const normalized = Object.fromEntries(
             Object.entries(weights).map(([k, v]) => [k, (v / total).toFixed(4)])
         );
 
+        // send job data to backend
         await axios.post(`${API}/jobs`, {
             title,
             description,
@@ -49,6 +50,7 @@ export default function JobForm({ open = true, onCreated, onClose }) {
             experience_required: experience,
         });
 
+        // reset form fields
         setTitle("");
         setDescription("");
         setLocation("");

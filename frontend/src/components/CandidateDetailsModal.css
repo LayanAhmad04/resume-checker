@@ -1,4 +1,3 @@
-/* 🌌 Dimmed Backdrop */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -19,7 +18,6 @@
     visibility: visible;
 }
 
-/* 🧩 Sliding Right Panel */
 .modal-panel {
     position: absolute;
     top: 0;
@@ -32,7 +30,6 @@
     flex-direction: column;
     transform: translateX(100%);
     transition: transform 0.5s cubic-bezier(0.25, 1, 0.3, 1);
-    /* Liquid glass background */
     background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
     border: 1px solid rgba(90, 130, 180, 0.3);
     box-shadow:
@@ -53,7 +50,6 @@
     transform: translateX(0);
 }
 
-/* 💠 Header */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -80,7 +76,6 @@
     color: #b8c4d6;
 }
 
-/* Score badge */
 .modal-score {
     background: linear-gradient(145deg, rgba(74, 144, 226, 0.25), rgba(40, 80, 160, 0.3));
     border: 1px solid rgba(74, 144, 226, 0.5);
@@ -92,7 +87,6 @@
     box-shadow: 0 0 10px rgba(74, 144, 226, 0.25);
 }
 
-/* ❌ Close Button */
 .close-btn {
     border: none;
     background: transparent;
@@ -106,7 +100,6 @@
     color: #9abaf0;
 }
 
-/* 📦 Content Box */
 .modal-content-box {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(90, 130, 180, 0.25);
@@ -127,12 +120,9 @@
 .candidate-email {
     font-size: 0.85rem;
     color: #c7ccd4;
-    /* optional – matches your site aesthetic */
     margin-bottom: 10px;
 }
 
-
-/* 📊 Score Breakdown */
 .score-breakdown {
     margin-top: 18px;
 }
@@ -172,7 +162,6 @@
 }
 
 
-/* ⚙️ Footer Buttons */
 .modal-actions {
     display: flex;
     gap: 40px;
@@ -205,7 +194,6 @@
         inset 0 1px 2px rgba(255, 255, 255, 0.2);
 }
 
-/* ✨ Soft entrance glow */
 .modal-panel::before {
     content: "";
     position: absolute;

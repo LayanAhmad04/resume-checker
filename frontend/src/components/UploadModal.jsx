@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react"; // using Lucide icon for a clean X
+import { X } from "lucide-react";
 import "./UploadModal.css";
 
 export default function UploadModal({ open, onClose, onUpload }) {
@@ -19,11 +19,13 @@ export default function UploadModal({ open, onClose, onUpload }) {
     if (!open && !visible) return null;
 
     const handleChange = (e) => setFiles([...e.target.files]);
+    // drag-and-drop file upload
     const handleDrop = (e) => {
         e.preventDefault();
         setFiles([...e.dataTransfer.files]);
     };
 
+    // validates and sends files to the parent callback
     const handleUpload = () => {
         if (files.length === 0) return;
         onUpload(files);
@@ -37,7 +39,6 @@ export default function UploadModal({ open, onClose, onUpload }) {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
             >
-                {/* ❌ Top-right close icon */}
                 <button className="upload-modal-close" onClick={onClose}>
                     <X size={18} />
                 </button>

@@ -1,4 +1,3 @@
-/* 🌌 Jobs Page Styling (Liquid Glass Theme) */
 .jobs-page {
     position: relative;
     min-height: 100vh;
@@ -39,12 +38,10 @@
 
 .jobs-page.score-open .jobs-layout {
     transform: translateX(-100px);
-    /* Push everything slightly left */
     opacity: 0.4;
     pointer-events: none;
 }
 
-/* Header */
 .jobs-header {
     display: flex;
     justify-content: space-between;
@@ -59,7 +56,6 @@
     font-weight: 700;
 }
 
-/* ✨ Add Job Button (Glass Sphere) */
 .add-job-btn {
     display: flex;
     margin-bottom: -30px;
@@ -79,7 +75,6 @@
     backdrop-filter: blur(0.5px);
     transition: all 0.25s ease;
     flex-shrink: 0;
-    /* prevents being squished */
 }
 
 .add-job-btn:hover {
@@ -97,7 +92,6 @@
     pointer-events: none;
 }
 
-/* Layout */
 .jobs-layout {
     display: flex;
     height: calc(100vh - 100px);
@@ -109,7 +103,6 @@
     padding-left: 40px;
 }
 
-/* Sidebar */
 .jobs-sidebar {
     flex: 0 0 30%;
     border-radius: 20px;
@@ -145,8 +138,6 @@
     scrollbar-width: none;
 }
 
-/* 🧊 Job Items (Glass Cards) */
-/* 🌈 Job Card Variants (Color-Cycling Glass Cards) */
 .job-item {
     position: relative;
     min-width: 250px;
@@ -173,7 +164,6 @@
         0 0 8px rgba(80, 130, 190, 0.18);
 }
 
-/* Default border accent */
 .job-item {
     border-left: 15px solid #4a90e2;
 }
@@ -224,7 +214,6 @@
 }
 
 
-/* Active card highlight */
 .job-item.active {
     border-left-width: 20px;
     filter: brightness(1.05);
@@ -233,7 +222,6 @@
         0 0 10px rgba(90, 140, 200, 0.2),
         inset 0 0 6px rgba(80, 130, 190, 0.25);
 }
-
 
 .job-item-title {
     font-weight: 700;
@@ -247,7 +235,6 @@
     margin-top: 4px;
 }
 
-
 .tag-icon {
     width: 20px;
     height: 20px;
@@ -259,8 +246,6 @@
     border: none;
 }
 
-
-/* Bubbles (Location & Experience) */
 .job-taggs {
     display: flex;
     gap: 30px;
@@ -269,11 +254,8 @@
 
 .job-taggs .tagg {
     display: inline-flex;
-    /* align items horizontally */
     align-items: center;
-    /* vertically center icon + text */
     gap: 7px;
-    /* spacing between icon and text */
 }
 
 .job-taggs span {
@@ -288,11 +270,8 @@
     color: #d7e2f0;
     backdrop-filter: blur(0.5px);
     flex: 1;
-    /* make both take equal width */
     text-align: center;
-    /* center text nicely */
     min-width: 0;
-    /* prevents overflow issues */
 }
 
 .divider {
@@ -301,7 +280,6 @@
     margin: 8px 0;
 }
 
-/* Right Side */
 .job-details {
     flex: 1;
     margin-right: 70px;
@@ -320,13 +298,10 @@
 
 }
 
-/* Hide scrollbar track, keep only thumb */
 .job-details::-webkit-scrollbar {
     width: 8px;
-    /* adjust thickness */
 }
 
-/* Transparent background — hides the track */
 .job-details::-webkit-scrollbar-track {
     background: transparent;
 }
@@ -343,7 +318,6 @@
         inset 0 0 4px rgba(90, 130, 180, 0.25);
 }
 
-/* Optional: make thumb brighter on hover */
 .job-details::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(to bottom,
             rgba(100, 160, 220, 0.35),
@@ -353,7 +327,6 @@
         inset 0 0 4px rgba(90, 130, 180, 0.25);
 }
 
-/* Header + Menu */
 .job-header {
     display: flex;
     align-items: center;
@@ -375,14 +348,12 @@
 
 .jobs-header h1 {
     margin-left: 45px;
-    /* 👈 shifts only "Jobs" */
 }
 
 .job-header-tags {
     display: flex;
     align-items: center;
     gap: 14px;
-    /* slightly wider spacing for larger tags */
     margin-top: -50px;
 }
 
@@ -394,9 +365,7 @@
         0 3px 8px rgba(0, 0, 0, 0.6);
     border-radius: 9999px;
     padding: 10px 18px;
-    /* bigger pill shape */
     font-size: 15px;
-    /* larger text */
     font-weight: 500;
     color: #e4edf8;
     letter-spacing: 0.3px;
@@ -427,7 +396,6 @@
     backdrop-filter: blur(0.5px);
     transition: all 0.25s ease;
     flex-shrink: 0;
-    /* prevents being squished */
 }
 
 .menu-btn:hover {
@@ -445,8 +413,6 @@
     pointer-events: none;
 }
 
-
-/* Description */
 .job-description {
     flex: 1;
     margin-bottom: 20px;
@@ -458,7 +424,6 @@
     white-space: pre-line;
 }
 
-/* 🧩 Actions (Upload + Score Buttons) */
 .job-actions {
     display: flex;
     gap: 50px;
@@ -491,7 +456,6 @@
     transform: translateY(-2px);
 }
 
-/* Modal */
 .modal-overlay {
     position: fixed;
     top: 0;

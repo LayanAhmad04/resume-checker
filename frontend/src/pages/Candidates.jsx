@@ -12,6 +12,7 @@ export default function Candidates() {
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
 
+    // fetch jobss
     useEffect(() => {
         fetchJobs();
     }, []);
@@ -26,6 +27,7 @@ export default function Candidates() {
         }
     };
 
+    // when the selected job changes fetch its associated candidates
     useEffect(() => {
         if (selectedJobId) fetchCandidates(selectedJobId);
     }, [selectedJobId]);
@@ -39,12 +41,14 @@ export default function Candidates() {
         }
     };
 
+    // open modal
     const openModal = (candidate) => {
-        console.log("Opening modal for candidate:", candidate); // ✅ debug line
+        console.log("Opening modal for candidate:", candidate);
         setSelectedCandidate(candidate);
         setModalOpen(true);
     };
 
+    // close modal
     const closeModal = () => {
         setModalOpen(false);
         setSelectedCandidate(null);
@@ -52,12 +56,9 @@ export default function Candidates() {
 
     return (
         <>
-            {/* Blur background when modal is open */}
             <div className={`candidates-page ${modalOpen ? "blur-background" : ""}`}>
                 <h1 className="candidates-page-title">Candidates</h1>
-
                 <div className="candidates-layout">
-                    {/* Sidebar */}
                     <div className="candidates-sidebar">
                         <div className="sidebar-header">Jobs at Greenstone</div>
                         <div className="sidebar-jobs-list">
@@ -115,7 +116,6 @@ export default function Candidates() {
                         </div>
                     </div>
 
-                    {/* Candidates Table */}
                     <div className="candidates-table-section">
                         <div className="candidates-table-header">
                             <div>Candidate Name</div>
@@ -130,7 +130,7 @@ export default function Candidates() {
                                     <div
                                         key={c.id}
                                         className="candidates-table-row"
-                                        onClick={() => openModal(c)} // ✅ opens modal
+                                        onClick={() => openModal(c)}
                                     >
                                         <div>{c.name || "—"}</div>
                                         <div>{c.score != null ? `⭐ ${c.score}` : "—"}</div>
@@ -142,12 +142,11 @@ export default function Candidates() {
                 </div>
             </div>
 
-            {/* Modal renders outside blur wrapper */}
             <CandidateDetailsModal
                 open={modalOpen}
                 onClose={closeModal}
                 candidate={selectedCandidate}
-                jobs={jobs} // 👈 pass all job data
+                jobs={jobs}
             />
         </>
     );

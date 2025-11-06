@@ -7,7 +7,6 @@ import psycopg2
 from config import DB_DSN, OPENAI_KEY, PARSER_PORT
 from openai import OpenAI
 
-# -------- SETUP --------
 client = OpenAI(api_key=OPENAI_KEY)
 nlp = spacy.load("en_core_web_sm")
 
@@ -19,7 +18,6 @@ UPLOAD_DIR = os.path.abspath(
 print("Parser service UPLOAD_DIR:", UPLOAD_DIR)
 
 
-# -------- TEXT EXTRACTION --------
 def extract_text_from_pdf(path):
     doc = fitz.open(path)
     return "\n".join([p.get_text() or "" for p in doc])
@@ -45,6 +43,7 @@ def extract_text(path):
         return ""
 
 
+# name and email extraction
 def extract_name_email(text):
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
@@ -52,13 +51,11 @@ def extract_name_email(text):
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
-    # First, look for ALL CAPS names (most CVs do this)
     for line in lines[:20]:
         if re.match(r"^[A-Z\s]{3,}$", line) and 2 <= len(line.split()) <= 4:
             candidate_name = line.title()
             break
 
-    # If not found, fallback to typical capitalized first + last name
     if not candidate_name:
         for line in lines[:15]:
             if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", line):
@@ -67,7 +64,7 @@ def extract_name_email(text):
 
     return candidate_name, email
 
-
+# database connection
 def db_connect():
     return psycopg2.connect(
         host=DB_DSN["host"],
@@ -77,8 +74,7 @@ def db_connect():
         dbname=DB_DSN["database"],
     )
 
-
-# -------- OPENAI SCORING --------
+# openAI scoring logic
 def call_openai_subscores_and_justification(job_description: str, resume_text: str, criteria: dict):
     weights = {}
     total_raw = 0.0
@@ -176,20 +172,18 @@ Normalized weights:
             "Fallback justification: OpenAI failed or invalid response.",
         )
 
-
-# -------- PROCESS ROUTE --------
+# main parser endpoint
 @app.route("/process", methods=["POST"])
 def process():
     data = request.json
     jobId = data.get("jobId")
     candidateId = data.get("candidateId")
     filename = data.get("filename")
-    file_data = data.get("fileData")  # base64 string
+    file_data = data.get("fileData") 
 
     if not (jobId and candidateId and file_data and filename):
         return jsonify({"error": "missing parameters"}), 400
 
-    # Decode base64 and save temporarily
     try:
         temp_path = os.path.join(tempfile.gettempdir(), filename)
         with open(temp_path, "wb") as f:
@@ -200,11 +194,9 @@ def process():
     filePathResolved = temp_path
     print(f"Processing candidate {candidateId}, file {filePathResolved}")
 
-    # Extract text
     text = extract_text(filePathResolved)
     name, email = extract_name_email(text)
 
-    # Cleanup temporary file
     try:
         os.remove(filePathResolved)
     except Exception:

@@ -7,26 +7,24 @@ const fs = require('fs');
 const { Pool } = require('pg');
 const axios = require('axios');
 
-// ---------- SETUP ----------
 const uploadDir = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Multer setup (stores uploaded resumes locally)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({
     storage,
-    limits: { files: 50, fileSize: 10 * 1024 * 1024 } // 10MB per file
+    limits: { files: 50, fileSize: 10 * 1024 * 1024 }
 });
 
 const app = express();
 
-// ---------- CORS ----------
+// CORS Configuration
 const allowedOrigins = [
-    'https://resume-checker-gamma.vercel.app', // ✅ your frontend on Vercel
-    'http://localhost:5173'                    // for local testing
+    'https://resume-checker-gamma.vercel.app',
+    'http://localhost:5173'
 ];
 
 app.use(cors({
@@ -34,7 +32,7 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            console.log('❌ Blocked by CORS:', origin);
+            console.log('Blocked by CORS:', origin);
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -43,7 +41,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// ---------- DATABASE ----------
+// Database Configuration
 const pool = new Pool({
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT, 10),
@@ -56,12 +54,11 @@ const pool = new Pool({
     }
 });
 
-// ---------- ROOT ROUTE ----------
 app.get('/', (req, res) => {
-    res.send('✅ Resume Checker backend is running!');
+    res.send('Resume Checker backend is running!');
 });
 
-// ---------- JOBS ENDPOINTS ----------
+// Create new job
 app.post('/api/jobs', async (req, res) => {
     const { title, description, criteria, location, experience_required } = req.body;
     try {
@@ -77,6 +74,7 @@ app.post('/api/jobs', async (req, res) => {
     }
 });
 
+// Fetch all jobs
 app.get('/api/jobs', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -91,7 +89,7 @@ app.get('/api/jobs', async (req, res) => {
     }
 });
 
-// ---------- CANDIDATES ENDPOINTS ----------
+// Fetch all candidates
 app.get('/api/candidates', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -107,6 +105,7 @@ app.get('/api/candidates', async (req, res) => {
     }
 });
 
+// Fetch candidates by job ID
 app.get('/api/jobs/:jobId/candidates', async (req, res) => {
     const jobId = req.params.jobId;
     try {
@@ -121,6 +120,7 @@ app.get('/api/jobs/:jobId/candidates', async (req, res) => {
     }
 });
 
+// Insert candidate
 app.post('/api/candidates', async (req, res) => {
     const { name, job_id, score, filename } = req.body;
     try {
@@ -157,7 +157,7 @@ app.post('/api/candidates/:id/reeval', async (req, res) => {
     }
 });
 
-// ---------- FILE UPLOAD ----------
+// Handles multiple candidate uploads for a specific job
 app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) => {
     const jobId = req.params.jobId;
     const files = req.files;
@@ -194,7 +194,7 @@ app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) 
                         jobId,
                         candidateId: candidate.id,
                         filename: f.filename,
-                        fileData // ✅ base64 string
+                        fileData
                     },
                     { timeout: 120000 }
                 );
@@ -215,6 +215,6 @@ app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) 
     }
 });
 
-// ---------- SERVER START ----------
+// Server Startup
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`✅ Backend listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`Backend listening on port ${PORT}`));

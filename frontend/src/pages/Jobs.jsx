@@ -21,16 +21,17 @@ export default function Jobs() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showAddJobModal, setShowAddJobModal] = useState(false);
 
+    // fetch job data
     useEffect(() => {
         fetchJobs();
     }, []);
 
+    // fetch all jobs
     async function fetchJobs() {
         const res = await axios.get(`${API}/jobs`);
         const sortedJobs = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setJobs(sortedJobs);
 
-        // ✅ If redirected from Landing with a selectedJobId, set that job
         if (selectedJobIdFromNav) {
             const jobToSelect = sortedJobs.find(j => j.id === selectedJobIdFromNav);
             if (jobToSelect) {
@@ -39,12 +40,12 @@ export default function Jobs() {
             }
         }
 
-        // Default to the most recent job if none selected
         if (!selectedJob && sortedJobs.length > 0) {
             setSelectedJob(sortedJobs[0]);
         }
     }
 
+    // resume upload handler
     const handleUpload = async (files) => {
         if (!selectedJob) return;
         const fd = new FormData();
@@ -57,7 +58,6 @@ export default function Jobs() {
 
     return (
         <div className={`jobs-page ${showScoreModal ? "score-open" : ""}`}>
-            {/* Header */}
             <div className="jobs-header">
                 <h1>Jobs</h1>
                 <button className="add-job-btn" onClick={() => setShowAddJobModal(true)}>
@@ -66,7 +66,6 @@ export default function Jobs() {
             </div>
 
             <div className="jobs-layout">
-                {/* Left Column */}
                 <div className="jobs-sidebar">
                     <div className="sidebar-title">Jobs at Greenstone</div>
                     <div className="jobs-list">
@@ -110,7 +109,6 @@ export default function Jobs() {
                     </div>
                 </div>
 
-                {/* Right Column */}
                 <div className="job-details">
                     {selectedJob ? (
                         <div className="job-content">
@@ -155,7 +153,6 @@ export default function Jobs() {
                 </div>
             </div>
 
-            {/* Modals */}
             <ScoreSettingsModal
                 open={showScoreModal}
                 onClose={() => setShowScoreModal(false)}

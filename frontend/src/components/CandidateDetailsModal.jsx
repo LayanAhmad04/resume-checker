@@ -2,31 +2,31 @@ import React, { useEffect, useState } from "react";
 import "./CandidateDetailsModal.css";
 
 export default function CandidateDetailsModal({ open, onClose, candidate, jobs }) {
-    const [show, setShow] = useState(open); // controls whether modal is in DOM
-    const [closing, setClosing] = useState(false); // triggers exit animation
+    const [show, setShow] = useState(open);
+    const [closing, setClosing] = useState(false);
 
-    // Handle modal open/close and scroll lock
+    // handle modal open/close behavior
     useEffect(() => {
         if (open) {
             setShow(true);
             setClosing(false);
-            document.body.style.overflow = "hidden"; // disable background scroll
+            document.body.style.overflow = "hidden";
         } else if (show) {
             setClosing(true);
-            document.body.style.overflow = "auto"; // re-enable scroll
+            document.body.style.overflow = "auto";
         }
     }, [open]);
 
-    // Remove modal from DOM after closing animation
     const handleTransitionEnd = () => {
         if (closing) setShow(false);
     };
 
     if (!show || !candidate) return null;
 
-    // Find job title from jobs array
+    // find job title linked to candidate
     const jobTitle = jobs?.find((job) => job.id === candidate.job_id)?.title || "Unknown Job";
 
+    // parse candidate subscores if provided
     const subscores = candidate.subscores
         ? typeof candidate.subscores === "string"
             ? JSON.parse(candidate.subscores)
@@ -43,7 +43,6 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs }
                 onClick={(e) => e.stopPropagation()}
                 onTransitionEnd={handleTransitionEnd}
             >
-                {/* Header Section */}
                 <div className="modal-header">
                     <div className="modal-info">
                         <h2 className="candidate-name">{candidate.name || "Unknown Candidate"}</h2>
@@ -55,7 +54,6 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs }
                     <button className="close-btn" onClick={onClose}>✕</button>
                 </div>
 
-                {/* Inner Content Box */}
                 <div className="modal-content-box">
                     <p className="candidate-email">
                         <strong>Email:</strong> {candidate.email || "No email available"}

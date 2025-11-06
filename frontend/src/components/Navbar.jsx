@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
-import "./Navbar.css"; // ✅ link the CSS file
+import "./Navbar.css";
 
 export default function Navbar() {
     const nav = useNavigate();
@@ -10,7 +10,6 @@ export default function Navbar() {
             label: "Dashboard",
             path: "/",
             icon: (
-                // 4 squares 2x2 icon
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -33,7 +32,6 @@ export default function Navbar() {
             label: "Jobs",
             path: "/jobs",
             icon: (
-                // work bag icon
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -54,7 +52,6 @@ export default function Navbar() {
             label: "Candidates",
             path: "/candidates",
             icon: (
-                // user icon
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"

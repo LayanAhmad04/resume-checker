@@ -11,4 +11,4 @@ DB_DSN = {
 }
 PARSER_PORT = int(os.getenv('PARSER_PORT', 5000))
 OPENAI_KEY = os.getenv('OPENAI_API_KEY')
-BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:4000')  # optional
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:4000') 

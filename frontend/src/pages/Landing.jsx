@@ -11,21 +11,25 @@ export default function Landing() {
     const [candidates, setCandidates] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
 
+    // initial data fetch
     useEffect(() => {
         fetchJobs();
         fetchCandidates();
     }, []);
 
+    // fetch jobs
     const fetchJobs = async () => {
         const res = await axios.get(`${API}/jobs`);
         setJobs(res.data);
     };
 
+    //fetch candidates
     const fetchCandidates = async () => {
         const res = await axios.get(`${API}/candidates`);
         setCandidates(res.data);
     };
 
+    //search handler
     const handleSearch = (e) => {
         e.preventDefault();
         const term = searchTerm.trim().toLowerCase();

@@ -1,8 +1,6 @@
-/* Backdrop — covers entire page and blurs background */
 .jobform-backdrop {
     position: fixed;
     inset: 0;
-    /* shorthand for top:0; right:0; bottom:0; left:0 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -10,26 +8,20 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
-    /* semi-transparent dark overlay so blur is visible */
     background: rgba(10, 15, 25, 0.45);
-    /* the actual blur of whatever is behind the overlay */
     -webkit-backdrop-filter: blur(8px) saturate(140%);
     backdrop-filter: blur(8px) saturate(140%);
 }
 
-/* show state — enable pointer events and fade in */
 .jobform-backdrop.show {
     opacity: 1;
     pointer-events: auto;
 }
 
-/* Panel: match UploadModal dimensions & responsive rules */
 .jobform-panel {
     position: relative;
     width: 420px;
-    /* same as UploadModal */
     max-width: 92vw;
-    /* responsive on small screens */
     background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
     border: 1px solid rgba(90, 130, 180, 0.3);
     box-shadow:
@@ -48,7 +40,6 @@
     box-sizing: border-box;
 }
 
-/* Animations */
 .jobform-panel.slide-in {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -59,7 +50,6 @@
     opacity: 0;
 }
 
-/* Close button */
 .jobform-close {
     position: absolute;
     top: 12px;
@@ -76,7 +66,6 @@
     transform: scale(1.08);
 }
 
-/* Title */
 .jobform-title {
     margin: 4px 0 14px 0;
     font-size: 18px;
@@ -85,7 +74,6 @@
     text-align: center;
 }
 
-/* Inputs */
 .jobform-input,
 .jobform-textarea {
     width: 100%;
@@ -112,7 +100,6 @@
     border-color: rgba(100, 160, 240, 0.38);
 }
 
-/* Score settings */
 .jobform-weights {
     margin-top: -10px;
     color: #b8c4d6;
@@ -142,12 +129,10 @@
     margin-left: 6px;
 }
 
-/* Range control — keep native look, but full width */
 .jobform-weight-item input[type="range"] {
     width: 100%;
 }
 
-/* Button area */
 .jobform-actions {
     display: flex;
     justify-content: center;
@@ -170,7 +155,6 @@
     background: linear-gradient(145deg, rgba(74, 144, 226, 0.35), rgba(40, 80, 160, 0.4));
 }
 
-/* Small screens: slightly reduce padding/height to keep things neat */
 @media (max-width: 420px) {
     .jobform-panel {
         padding: 18px;

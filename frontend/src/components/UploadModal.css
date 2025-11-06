@@ -1,4 +1,3 @@
-/* 🌌 Backdrop */
 .upload-modal-backdrop {
     position: fixed;
     top: 0;
@@ -19,7 +18,6 @@
     opacity: 1;
 }
 
-/* 🧩 Panel */
 .upload-modal-panel {
     width: 420px;
     background: linear-gradient(145deg, rgba(50, 90, 150, 0.08), rgba(15, 25, 45, 0.04));
@@ -39,7 +37,6 @@
     transition: all 0.3s cubic-bezier(0.25, 1, 0.3, 1);
 }
 
-/* ✨ Animate in */
 .upload-modal-panel.slide-in {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -50,7 +47,6 @@
     opacity: 0;
 }
 
-/* Titles */
 .upload-modal-title {
     margin: 0 0 10px 0;
     font-size: 18px;
@@ -64,11 +60,9 @@
     color: #b8c4d6;
 }
 
-/* File input */
 .upload-modal-input {
     display: flex;
     justify-content: center;
-    /* centers the upload button horizontally */
     align-items: center;
     width: 95%;
     padding: 10px;
@@ -90,7 +84,6 @@
     border-color: rgba(100, 160, 240, 0.4);
 }
 
-/* Notes & file list */
 .upload-modal-note {
     font-size: 12px;
     color: #8799b5;
@@ -111,7 +104,6 @@
 .upload-modal-actions {
     display: flex;
     justify-content: center;
-    /* centers the upload button horizontally */
     align-items: center;
     margin-top: 20px;
 }
@@ -132,7 +124,6 @@
     transform: scale(1.1);
 }
 
-/* Make sure panel is positioned relative for the X to anchor */
 .upload-modal-panel {
     position: relative;
     width: 420px;

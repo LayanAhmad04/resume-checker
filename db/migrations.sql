@@ -1,11 +1,10 @@
--- db/migrations.sql
 CREATE TABLE jobs (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  criteria JSONB NOT NULL,       -- e.g. {"experience":0.35,"skills":0.3,...}
-  location TEXT,                 -- NEW: Job location (e.g. Dubai, Remote)
-  experience_required TEXT,      -- NEW: Required years of experience (string for flexibility)
+  criteria JSONB NOT NULL,
+  location TEXT,
+  experience_required TEXT,
   created_at TIMESTAMP DEFAULT now()
 );
 

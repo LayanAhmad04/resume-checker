@@ -1,15 +1,9 @@
-/* 🌫️ Page background */
-
-
-/* Blur background when modal is open */
 .blur-background {
     filter: blur(6px);
     pointer-events: none;
-    /* disable clicks behind modal */
     transition: filter 0.3s ease;
 }
 
-/* Optional: make sure modal sits on top of everything */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -21,11 +15,7 @@
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    /* ✅ ensures it's above everything */
 }
-
-
-
 
 .candidates-page {
     position: relative;
@@ -63,7 +53,6 @@
     pointer-events: none;
 }
 
-/* 🧩 Layout */
 .candidates-layout {
     display: flex;
     height: 100%;
@@ -73,7 +62,6 @@
     z-index: 1;
 }
 
-/* 🧱 Sidebar */
 .candidates-sidebar {
     flex: 0 0 30%;
     border-radius: 20px;
@@ -91,7 +79,6 @@
     margin-bottom: 100px;
 }
 
-/* Title */
 .sidebar-header {
     background: linear-gradient(145deg, rgba(70, 120, 180, 0.08), rgba(20, 35, 60, 0.05));
     border: 1px solid rgba(90, 130, 180, 0.3);
@@ -105,14 +92,12 @@
     margin-bottom: 20px;
 }
 
-/* Jobs List */
 .sidebar-jobs-list {
     flex: 1;
     overflow-y: auto;
     scrollbar-width: none;
 }
 
-/* Job Card */
 .sidebar-job-item {
     position: relative;
     min-width: 250px;
@@ -156,7 +141,6 @@
     pointer-events: none;
 }
 
-/* Color variations */
 .sidebar-jobs-list>div:nth-child(4n + 1) .sidebar-job-item {
     border-left-color: #4a90e2;
 }
@@ -190,7 +174,6 @@
     background: rgba(245, 166, 35, 0.25);
 }
 
-/* Active */
 .sidebar-job-item.active {
     border-left-width: 20px;
     filter: brightness(1.05);
@@ -200,7 +183,6 @@
         inset 0 0 6px rgba(80, 130, 190, 0.25);
 }
 
-/* Text */
 .sidebar-job-title {
     font-weight: 700;
     font-size: 18px;
@@ -248,7 +230,6 @@
     transform: scale(1.1);
 }
 
-
 .sidebar-job-tags span {
     background: linear-gradient(145deg, rgba(70, 120, 180, 0.08), rgba(20, 35, 60, 0.05));
     border: 1px solid rgba(90, 130, 180, 0.3);
@@ -261,22 +242,16 @@
     color: #d7e2f0;
     backdrop-filter: blur(0.5px);
     flex: 1;
-    /* make both take equal width */
     text-align: center;
-    /* center text nicely */
     min-width: 0;
-    /* prevents overflow issues */
 }
 
-/* Divider */
 .sidebar-divider {
     height: 1px;
     background: rgba(90, 130, 180, 0.2);
     margin: 8px 0;
 }
 
-/* 👥 Right Content */
-/* 🔹 Candidates Table Section */
 .candidates-table-section {
     border-radius: 20px;
     padding: 24px;
@@ -291,15 +266,12 @@
     flex-direction: column;
     gap: 0;
     width: 95%;
-    /* increase width */
     max-width: 1200px;
-    /* optional: limit max width */
     margin: 0 auto;
     margin-bottom: 100px;
     overflow: hidden;
 }
 
-/* Header */
 .candidates-table-header {
     display: grid;
     grid-template-columns: 1.5fr 0.8fr 1fr;
@@ -316,7 +288,6 @@
         0 3px 15px rgba(0, 0, 0, 0.75);
 }
 
-/* Scrollable candidates list */
 .candidates-table-list {
     display: flex;
     flex-direction: column;
@@ -329,12 +300,10 @@
 
 }
 
-/* Hide scrollbar */
 .candidates-table-list::-webkit-scrollbar {
     display: none;
 }
 
-/* Each candidate row */
 .candidates-table-row {
     display: grid;
     grid-template-columns: 1.5fr 0.8fr 1fr;
@@ -349,10 +318,8 @@
 
 .candidates-table-row>div {
     pointer-events: none;
-    /* children won't block the row click */
 }
 
-/* Hover effect */
 .candidates-table-row:hover {
     background: linear-gradient(145deg, rgba(80, 130, 190, 0.1), rgba(20, 35, 60, 0.05));
     box-shadow:
@@ -360,14 +327,12 @@
         0 0 6px rgba(80, 130, 190, 0.12);
 }
 
-/* Empty state */
 .no-candidates-row {
     padding: 12px 20px;
     color: #a3aab5;
     font-size: 14px;
 }
 
-/* Responsive adjustments */
 @media (max-height: 700px) {
     .candidates-table-list {
         height: calc(40vh - 60px);

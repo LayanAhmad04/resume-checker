@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ScoreSettingsModal.css";
 
 export default function ScoreSettingsModal({ open, onClose, onSave, initialWeights }) {
+    // default scoring values
     const defaultWeights = {
         experience: 0.35,
         skills: 0.30,
@@ -12,12 +13,12 @@ export default function ScoreSettingsModal({ open, onClose, onSave, initialWeigh
 
     const [weights, setWeights] = useState(defaultWeights);
 
-    // ✅ Always lock body scroll when modal is open
     useEffect(() => {
         document.body.style.overflow = open ? "hidden" : "";
     }, [open]);
 
-    // ✅ Fix #1: Make sure weights are set when modal opens or props update
+    // load initial weights or reset to default
+
     useEffect(() => {
         if (open) {
             if (initialWeights && Object.keys(initialWeights).length > 0) {
@@ -28,7 +29,6 @@ export default function ScoreSettingsModal({ open, onClose, onSave, initialWeigh
         }
     }, [open, initialWeights]);
 
-    // ✅ Fix #2: Ensure weights update if initialWeights come later (async case)
     useEffect(() => {
         if (!open) return;
         if (initialWeights && Object.keys(initialWeights).length > 0) {
@@ -44,6 +44,7 @@ export default function ScoreSettingsModal({ open, onClose, onSave, initialWeigh
         setWeights(defaultWeights);
     };
 
+    // normalize weights so total = 1 then save
     const save = () => {
         const total = Object.values(weights).reduce((a, b) => a + b, 0);
         const normalized = Object.fromEntries(
@@ -53,7 +54,6 @@ export default function ScoreSettingsModal({ open, onClose, onSave, initialWeigh
         onClose();
     };
 
-    // ✅ Fix #3: Prevent rendering when modal is closed
     if (!open) return null;
 
     return (
