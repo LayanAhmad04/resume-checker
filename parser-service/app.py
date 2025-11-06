@@ -138,6 +138,7 @@ Normalized weights:
             ],
             temperature=0.0,
             max_tokens=700,
+            seed=42  
         )
 
         txt = response.choices[0].message.content
