@@ -337,3 +337,37 @@
         padding: 10px 14px;
     }
 }
+
+.jobs-carousel,
+.candidates-list {
+    scrollbar-width: thin;
+    scrollbar-color: #1e2a38 transparent;
+}
+
+.jobs-carousel::-webkit-scrollbar,
+.candidates-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+}
+
+.jobs-carousel::-webkit-scrollbar-track,
+.candidates-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.jobs-carousel::-webkit-scrollbar-thumb,
+.candidates-list::-webkit-scrollbar-thumb {
+    background: #1e2a38;
+    border-radius: 999px;
+}
+
+.jobs-carousel::-webkit-scrollbar-thumb:hover,
+.candidates-list::-webkit-scrollbar-thumb:hover {
+    background: #243444;
+}
+
+.jobs-carousel::-webkit-scrollbar-button,
+.candidates-list::-webkit-scrollbar-button {
+    display: none;
+}
