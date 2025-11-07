@@ -120,6 +120,38 @@ app.get('/api/jobs/:jobId/candidates', async (req, res) => {
     }
 });
 
+
+// delete a job and all its candidates
+app.delete('/api/jobs/:jobId', async (req, res) => {
+    const jobId = req.params.jobId;
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // delete related candidates first
+        await client.query('DELETE FROM candidates WHERE job_id=$1', [jobId]);
+
+        // delete the job itself
+        const result = await client.query('DELETE FROM jobs WHERE id=$1 RETURNING *', [jobId]);
+
+        await client.query('COMMIT');
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        res.json({ message: 'Job and related candidates deleted successfully' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error deleting job:', err);
+        res.status(500).json({ error: 'Failed to delete job' });
+    } finally {
+        client.release();
+    }
+});
+
+
 // Insert candidate
 app.post('/api/candidates', async (req, res) => {
     const { name, job_id, score, filename } = req.body;
