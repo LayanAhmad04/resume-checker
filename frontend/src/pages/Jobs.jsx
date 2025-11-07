@@ -187,10 +187,11 @@ export default function Jobs() {
             <ScoreSettingsModal
                 open={showScoreModal}
                 onClose={() => setShowScoreModal(false)}
-                onSave={(newWeights) => setWeights(newWeights)}
+                onWeightsSaved={(newWeights) => setWeights(newWeights)}
                 initialWeights={weights}
                 jobId={selectedJob?.id}
             />
+
 
             <UploadModal
                 open={showUploadModal}
