@@ -89,6 +89,47 @@ app.get('/api/jobs', async (req, res) => {
     }
 });
 
+// update job score criteria
+app.put('/api/jobs/:jobId/criteria', async (req, res) => {
+    const { jobId } = req.params;
+    const { criteria } = req.body;
+    if (!criteria || typeof criteria !== 'object') {
+        return res.status(400).json({ error: 'Invalid criteria' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE jobs SET criteria=$1 WHERE id=$2 RETURNING *`,
+            [JSON.stringify(criteria), jobId]
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+        res.json({ message: 'Criteria updated', job: result.rows[0] });
+    } catch (err) {
+        console.error('Error updating criteria:', err);
+        res.status(500).json({ error: 'Failed to update criteria' });
+    }
+});
+
+// get job criteria
+app.get('/api/jobs/:jobId/criteria', async (req, res) => {
+    const { jobId } = req.params;
+    try {
+        const result = await pool.query(`SELECT criteria FROM jobs WHERE id=$1`, [jobId]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+        const criteria = result.rows[0].criteria;
+        res.json({ criteria: criteria ? JSON.parse(criteria) : {} });
+    } catch (err) {
+        console.error('Error fetching criteria:', err);
+        res.status(500).json({ error: 'db error' });
+    }
+});
+
+
+
 // Fetch all candidates
 app.get('/api/candidates', async (req, res) => {
     try {
