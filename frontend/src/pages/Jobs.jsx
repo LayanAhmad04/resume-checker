@@ -189,6 +189,7 @@ export default function Jobs() {
                 onClose={() => setShowScoreModal(false)}
                 onSave={(newWeights) => setWeights(newWeights)}
                 initialWeights={weights}
+                jobId={selectedJobId?.id}
             />
 
             <UploadModal
