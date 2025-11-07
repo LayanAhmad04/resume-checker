@@ -93,40 +93,47 @@ app.get('/api/jobs', async (req, res) => {
 app.put('/api/jobs/:jobId/criteria', async (req, res) => {
     const { jobId } = req.params;
     const { criteria } = req.body;
-    if (!criteria || typeof criteria !== 'object') {
-        return res.status(400).json({ error: 'Invalid criteria' });
+
+    if (!criteria || typeof criteria !== "object") {
+        return res.status(400).json({ error: "Invalid criteria format" });
     }
 
     try {
         const result = await pool.query(
-            `UPDATE jobs SET criteria=$1 WHERE id=$2 RETURNING *`,
-            [JSON.stringify(criteria), jobId]
+            `UPDATE jobs SET criteria = $1::jsonb WHERE id = $2 RETURNING id, criteria`,
+            [criteria, jobId]
         );
+
         if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Job not found' });
+            return res.status(404).json({ error: "Job not found" });
         }
-        res.json({ message: 'Criteria updated', job: result.rows[0] });
+
+        console.log("Updated criteria for job", jobId, "→", result.rows[0].criteria);
+        res.json({ ok: true, criteria: result.rows[0].criteria });
     } catch (err) {
-        console.error('Error updating criteria:', err);
-        res.status(500).json({ error: 'Failed to update criteria' });
+        console.error("Error updating criteria:", err);
+        res.status(500).json({ error: "Failed to update criteria" });
     }
 });
 
-// get job criteria
+// get job score criteria
 app.get('/api/jobs/:jobId/criteria', async (req, res) => {
     const { jobId } = req.params;
+
     try {
-        const result = await pool.query(`SELECT criteria FROM jobs WHERE id=$1`, [jobId]);
+        const result = await pool.query(`SELECT criteria FROM jobs WHERE id = $1`, [jobId]);
+
         if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Job not found' });
+            return res.status(404).json({ error: "Job not found" });
         }
-        const criteria = result.rows[0].criteria;
-        res.json({ criteria: criteria ? JSON.parse(criteria) : {} });
+
+        res.json({ criteria: result.rows[0].criteria || {} });
     } catch (err) {
-        console.error('Error fetching criteria:', err);
-        res.status(500).json({ error: 'db error' });
+        console.error("❌ Error fetching criteria:", err);
+        res.status(500).json({ error: "db error" });
     }
 });
+
 
 
 
