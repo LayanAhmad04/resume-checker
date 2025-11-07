@@ -383,5 +383,8 @@
 
 .sidebar-jobs-list::-webkit-scrollbar-button,
 .candidates-table-list::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
     display: none;
+    background: none;
 }

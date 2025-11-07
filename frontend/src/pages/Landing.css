@@ -235,10 +235,6 @@
     border-radius: 0 0 12px 12px;
 }
 
-.candidates-list::-webkit-scrollbar {
-    display: none;
-}
-
 .candidate-row {
     display: grid;
     grid-template-columns: 1.5fr 0.8fr 1fr;
@@ -369,5 +365,8 @@
 
 .jobs-carousel::-webkit-scrollbar-button,
 .candidates-list::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
     display: none;
+    background: none;
 }

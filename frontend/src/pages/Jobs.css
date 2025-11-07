@@ -169,7 +169,10 @@
 }
 
 .jobs-list::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
     display: none;
+    background: none;
 }
 
 .job-item {
@@ -354,7 +357,10 @@
 }
 
 .job-details::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
     display: none;
+    background: none;
 }
 
 .job-header {
