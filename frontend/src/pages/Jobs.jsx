@@ -4,7 +4,7 @@ import axios from "axios";
 import JobForm from "../components/JobForm";
 import ScoreSettingsModal from "../components/ScoreSettingsModal";
 import UploadModal from "../components/UploadModal";
-import { Plus, MoreVertical } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { FaUpload, FaCog } from "react-icons/fa";
 import "./Jobs.css";
 
@@ -33,7 +33,7 @@ export default function Jobs() {
         setJobs(sortedJobs);
 
         if (selectedJobIdFromNav) {
-            const jobToSelect = sortedJobs.find(j => j.id === selectedJobIdFromNav);
+            const jobToSelect = sortedJobs.find((j) => j.id === selectedJobIdFromNav);
             if (jobToSelect) {
                 setSelectedJob(jobToSelect);
                 return;
@@ -45,11 +45,26 @@ export default function Jobs() {
         }
     }
 
+    // delete job and its candidates
+    async function handleDeleteJob(jobId) {
+        if (!window.confirm("Are you sure you want to delete this job and all its candidates?")) return;
+
+        try {
+            await axios.delete(`${API}/jobs/${jobId}`);
+            alert("Job and its candidates deleted successfully!");
+            fetchJobs();
+            setSelectedJob(null);
+        } catch (err) {
+            console.error("Error deleting job:", err);
+            alert("Failed to delete job. Please try again.");
+        }
+    }
+
     // resume upload handler
     const handleUpload = async (files) => {
         if (!selectedJob) return;
         const fd = new FormData();
-        files.forEach(f => fd.append("files", f));
+        files.forEach((f) => fd.append("files", f));
         await axios.post(`${API}/jobs/${selectedJob.id}/upload`, fd, {
             headers: { "Content-Type": "multipart/form-data" },
         });
@@ -81,10 +96,16 @@ export default function Jobs() {
                                     </div>
                                     <div className="job-taggs">
                                         <span className="tagg">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" strokeWidth="1.8"
-                                                strokeLinecap="round" strokeLinejoin="round"
-                                                className="tag-icon">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="tag-icon"
+                                            >
                                                 <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z" />
                                                 <circle cx="12" cy="10" r="3" />
                                             </svg>
@@ -92,10 +113,16 @@ export default function Jobs() {
                                         </span>
 
                                         <span className="tagg">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" strokeWidth="1.8"
-                                                strokeLinecap="round" strokeLinejoin="round"
-                                                className="tag-icon">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="tag-icon"
+                                            >
                                                 <path d="M22 10L12 5 2 10l10 5 10-5z" />
                                                 <path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5" />
                                             </svg>
@@ -124,8 +151,12 @@ export default function Jobs() {
                                             ? `${selectedJob.experience_required} yrs`
                                             : "N/A"}
                                     </span>
-                                    <button className="menu-btn">
-                                        <MoreVertical className="menu-icon" />
+                                    <button
+                                        className="delete-btn"
+                                        onClick={() => handleDeleteJob(selectedJob.id)}
+                                        title="Delete Job"
+                                    >
+                                        <Trash2 className="delete-icon" />
                                     </button>
                                 </div>
                             </div>

@@ -379,7 +379,7 @@
         0 0 6px rgba(90, 140, 210, 0.25);
 }
 
-.menu-btn {
+.delete-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -398,14 +398,14 @@
     flex-shrink: 0;
 }
 
-.menu-btn:hover {
+.delete-btn:hover {
     transform: translateY(-2px);
     box-shadow:
         0 0 8px rgba(100, 160, 240, 0.2),
         inset 0 0 4px rgba(90, 130, 180, 0.2);
 }
 
-.menu-icon {
+.delete-icon {
     width: 20px;
     height: 20px;
     color: #edf1f6;
