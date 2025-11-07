@@ -49,7 +49,7 @@ export default function ScoreSettingsModal({ open, onClose, jobId, initialWeight
         );
 
         try {
-            await axios.put(`${API}/api/jobs/${jobId}/criteria`, { criteria: normalized });
+            await axios.put(`${API}/jobs/${jobId}/criteria`, { criteria: normalized });
             onWeightsSaved(normalized);
             onClose();
         } catch (err) {
