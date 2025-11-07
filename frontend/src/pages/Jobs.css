@@ -363,6 +363,15 @@
     background: none;
 }
 
+.job-details::-webkit-scrollbar-track-piece:start {
+    margin-top: 14px;
+}
+
+.job-details::-webkit-scrollbar-track-piece:end {
+    margin-bottom: 14px;
+}
+
+
 .job-header {
     display: flex;
     align-items: center;
