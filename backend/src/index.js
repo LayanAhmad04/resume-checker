@@ -222,12 +222,19 @@ app.post('/api/candidates/:id/reeval', async (req, res) => {
         const candidate = (await pool.query('SELECT * FROM candidates WHERE id=$1', [id])).rows[0];
         if (!candidate) return res.status(404).json({ error: 'not found' });
 
-        const resp = await axios.post(`${process.env.PARSER_SERVICE_URL.replace(/\/$/, '')}/process`, {
-            jobId: candidate.job_id,
-            candidateId: id,
-            filePath: path.resolve(path.join(uploadDir, candidate.filename)),
-            filename: candidate.filename
-        }, { timeout: 120000 });
+        const filePath = path.resolve(path.join(uploadDir, candidate.filename));
+        const fileData = fs.readFileSync(filePath, { encoding: "base64" });
+
+        const resp = await axios.post(
+            `${process.env.PARSER_SERVICE_URL.replace(/\/$/, '')}/process`,
+            {
+                jobId: candidate.job_id,
+                candidateId: id,
+                filename: candidate.filename,
+                fileData
+            },
+            { timeout: 120000 }
+        );
 
         console.log('Re-eval parser response:', resp.data);
         res.json({ ok: true });
