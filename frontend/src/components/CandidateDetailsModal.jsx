@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./CandidateDetailsModal.css";
 
-export default function CandidateDetailsModal({ open, onClose, candidate, jobs }) {
+export default function CandidateDetailsModal({ open, onClose, candidate, jobs, onReevaluated }) {
     const [show, setShow] = useState(open);
     const [closing, setClosing] = useState(false);
     const [localCandidate, setCandidate] = useState(candidate);
@@ -127,11 +127,11 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs }
 
                                     if (newCandidate) {
                                         setCandidate(newCandidate);
-                                        alert("✅ Candidate re-evaluated successfully!");
+                                        onReevaluated(newCandidate);
                                     }
                                 } catch (err) {
                                     console.error("Re-evaluation failed:", err);
-                                    alert("❌ Re-evaluation failed. Please check backend logs.");
+                                    alert("Re-evaluation failed. Please check backend logs.");
                                 }
                             }}
                         >
