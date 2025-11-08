@@ -21,7 +21,6 @@ const upload = multer({
 
 const app = express();
 
-// CORS Configuration
 const allowedOrigins = [
     'https://resume-checker-gamma.vercel.app',
     'http://localhost:5173'
@@ -41,7 +40,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Database Configuration
+// database Configuration
 const pool = new Pool({
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT, 10),
@@ -58,7 +57,7 @@ app.get('/', (req, res) => {
     res.send('Resume Checker backend is running!');
 });
 
-// Create new job
+// create new job
 app.post('/api/jobs', async (req, res) => {
     const { title, description, criteria, location, experience_required } = req.body;
     try {
@@ -74,7 +73,7 @@ app.post('/api/jobs', async (req, res) => {
     }
 });
 
-// Fetch all jobs
+// fetch all jobs
 app.get('/api/jobs', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -134,10 +133,7 @@ app.get('/api/jobs/:jobId/criteria', async (req, res) => {
     }
 });
 
-
-
-
-// Fetch all candidates
+// fetch all candidates
 app.get('/api/candidates', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -153,7 +149,7 @@ app.get('/api/candidates', async (req, res) => {
     }
 });
 
-// Fetch candidates by job ID
+// fetch candidates by job ID
 app.get('/api/jobs/:jobId/candidates', async (req, res) => {
     const jobId = req.params.jobId;
     try {
@@ -200,7 +196,7 @@ app.delete('/api/jobs/:jobId', async (req, res) => {
 });
 
 
-// Insert candidate
+// insert candidate
 app.post('/api/candidates', async (req, res) => {
     const { name, job_id, score, filename } = req.body;
     try {
@@ -218,19 +214,33 @@ app.post('/api/candidates', async (req, res) => {
 
 app.post('/api/candidates/:id/reeval', async (req, res) => {
     const id = req.params.id;
-    try {
-        const candidate = (await pool.query('SELECT * FROM candidates WHERE id=$1', [id])).rows[0];
-        if (!candidate) return res.status(404).json({ error: 'not found' });
 
-        const filePath = path.resolve(path.join(uploadDir, candidate.filename));
-        const fileData = fs.readFileSync(filePath, { encoding: "base64" });
+    try {
+        const result = await pool.query('SELECT * FROM candidates WHERE id=$1', [id]);
+        const candidate = result.rows[0];
+        if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
+
+        let fileData = null;
+
+        if (candidate.raw_text) {
+            fileData = Buffer.from(candidate.raw_text).toString("base64");
+        } else if (candidate.filename) {
+            const filePath = path.resolve(path.join(uploadDir, candidate.filename));
+            if (fs.existsSync(filePath)) {
+                fileData = fs.readFileSync(filePath, { encoding: "base64" });
+            } else {
+                return res.status(404).json({ error: "Resume file not found on server and no raw_text available" });
+            }
+        } else {
+            return res.status(400).json({ error: "Candidate has no resume data" });
+        }
 
         const resp = await axios.post(
             `${process.env.PARSER_SERVICE_URL.replace(/\/$/, '')}/process`,
             {
                 jobId: candidate.job_id,
                 candidateId: id,
-                filename: candidate.filename,
+                filename: candidate.filename || `candidate-${id}.txt`,
                 fileData
             },
             { timeout: 120000 }
@@ -240,11 +250,12 @@ app.post('/api/candidates/:id/reeval', async (req, res) => {
         res.json({ ok: true });
     } catch (err) {
         console.error('Re-eval failed:', err?.response?.data || err.message || err);
-        res.status(500).json({ error: 're-eval failed' });
+        res.status(500).json({ error: 'Re-eval failed' });
     }
 });
 
-// Handles multiple candidate uploads for a specific job
+
+// handles multiple candidate uploads for a specific job
 app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) => {
     const jobId = req.params.jobId;
     const files = req.files;
@@ -302,6 +313,6 @@ app.post('/api/jobs/:jobId/upload', upload.array('files', 50), async (req, res) 
     }
 });
 
-// Server Startup
+// server Startup
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend listening on port ${PORT}`));
