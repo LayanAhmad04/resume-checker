@@ -179,22 +179,33 @@ def process():
     jobId = data.get("jobId")
     candidateId = data.get("candidateId")
     filename = data.get("filename")
-    file_data = data.get("fileData") 
+    file_data = data.get("fileData")
+    text_data = data.get("textData")  
 
-    if not (jobId and candidateId and file_data and filename):
+    if not (jobId and candidateId and filename):
         return jsonify({"error": "missing parameters"}), 400
 
-    try:
-        temp_path = os.path.join(tempfile.gettempdir(), filename)
-        with open(temp_path, "wb") as f:
-            f.write(base64.b64decode(file_data))
-    except Exception as e:
-        return jsonify({"error": "failed to decode file", "details": str(e)}), 400
+    text = ""
 
-    filePathResolved = temp_path
-    print(f"Processing candidate {candidateId}, file {filePathResolved}")
+    if text_data:  
+        text = text_data
+        print(f"Processing candidate {candidateId} using raw_text input")
+    elif file_data:  
+        try:
+            temp_path = os.path.join(tempfile.gettempdir(), filename)
+            with open(temp_path, "wb") as f:
+                f.write(base64.b64decode(file_data))
+            text = extract_text(temp_path)
+        except Exception as e:
+            return jsonify({"error": "failed to decode file", "details": str(e)}), 400
+        finally:
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+    else:
+        return jsonify({"error": "no fileData or textData provided"}), 400
 
-    text = extract_text(filePathResolved)
     name, email = extract_name_email(text)
 
     try:

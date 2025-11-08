@@ -222,12 +222,18 @@ app.post('/api/candidates/:id/reeval', async (req, res) => {
 
         let fileData = null;
 
+        let payload = {
+            jobId: candidate.job_id,
+            candidateId: id,
+            filename: candidate.filename || `candidate-${id}.txt`,
+        };
+
         if (candidate.raw_text) {
-            fileData = Buffer.from(candidate.raw_text).toString("base64");
+            payload.textData = candidate.raw_text;
         } else if (candidate.filename) {
             const filePath = path.resolve(path.join(uploadDir, candidate.filename));
             if (fs.existsSync(filePath)) {
-                fileData = fs.readFileSync(filePath, { encoding: "base64" });
+                payload.fileData = fs.readFileSync(filePath, { encoding: "base64" });
             } else {
                 return res.status(404).json({ error: "Resume file not found on server and no raw_text available" });
             }
@@ -237,14 +243,10 @@ app.post('/api/candidates/:id/reeval', async (req, res) => {
 
         const resp = await axios.post(
             `${process.env.PARSER_SERVICE_URL.replace(/\/$/, '')}/process`,
-            {
-                jobId: candidate.job_id,
-                candidateId: id,
-                filename: candidate.filename || `candidate-${id}.txt`,
-                fileData
-            },
+            payload,
             { timeout: 120000 }
         );
+
 
         console.log('Re-eval parser response:', resp.data);
         res.json({ ok: true });
