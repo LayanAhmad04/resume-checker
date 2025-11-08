@@ -4,6 +4,12 @@ import "./CandidateDetailsModal.css";
 export default function CandidateDetailsModal({ open, onClose, candidate, jobs }) {
     const [show, setShow] = useState(open);
     const [closing, setClosing] = useState(false);
+    const [localCandidate, setCandidate] = useState(candidate);
+
+    useEffect(() => {
+        setCandidate(candidate);
+    }, [candidate]);
+
 
     // handle modal open/close behavior
     useEffect(() => {
@@ -103,6 +109,35 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs }
                             </svg>
                             <h3>Score Breakdown</h3>
                         </div>
+
+                        <button
+                            className="reeval-btn"
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch(`${import.meta.env.VITE_API_BASE}/candidates/${candidate.id}/reeval`, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                    });
+                                    if (!res.ok) throw new Error("Failed to re-evaluate candidate");
+
+                                    // refetch updated candidate info
+                                    const updated = await fetch(`${import.meta.env.VITE_API_BASE}/jobs/${candidate.job_id}/candidates`);
+                                    const updatedList = await updated.json();
+                                    const newCandidate = updatedList.find((c) => c.id === candidate.id);
+
+                                    if (newCandidate) {
+                                        setCandidate(newCandidate);
+                                        alert("✅ Candidate re-evaluated successfully!");
+                                    }
+                                } catch (err) {
+                                    console.error("Re-evaluation failed:", err);
+                                    alert("❌ Re-evaluation failed. Please check backend logs.");
+                                }
+                            }}
+                        >
+                            Re-evaluate
+                        </button>
+
 
                         {Object.keys(subscores).length === 0 ? (
                             <p>No breakdown available.</p>

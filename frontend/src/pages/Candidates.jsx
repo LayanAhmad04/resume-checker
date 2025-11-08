@@ -147,7 +147,14 @@ export default function Candidates() {
                 onClose={closeModal}
                 candidate={selectedCandidate}
                 jobs={jobs}
+                onReevaluated={(updatedCandidate) => {
+                    setCandidates((prev) =>
+                        prev.map((c) => (c.id === updatedCandidate.id ? updatedCandidate : c))
+                    );
+                    setSelectedCandidate(updatedCandidate);
+                }}
             />
+
         </>
     );
 }

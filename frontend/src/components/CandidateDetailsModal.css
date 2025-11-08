@@ -205,3 +205,19 @@
     filter: blur(25px);
     pointer-events: none;
 }
+
+.reeval-btn {
+    background: linear-gradient(135deg, #2b6cb0, #3182ce);
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+.reeval-btn:hover {
+    background: linear-gradient(135deg, #2c5282, #2b6cb0);
+}
