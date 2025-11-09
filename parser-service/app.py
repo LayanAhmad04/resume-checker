@@ -32,9 +32,11 @@ def extract_text(path):
     try:
         low = path.lower()
         if low.endswith(".pdf"):
+            import fitz
             doc = fitz.open(path)
             return "\n".join([p.get_text() or "" for p in doc])
         elif low.endswith(".docx"):
+            import docx
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
         elif low.endswith(".doc"):
@@ -54,68 +56,50 @@ def clean_rtf(text):
 
 
 # name and email extraction
-def extract_name_email(text, file_ext=None):
+def extract_name_email(text):
+    # --- 1️⃣ Extract email ---
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-    # special cleanup for .doc files (to remove font names like "Calibri; Arial")
-    if file_ext and file_ext.lower().endswith(".doc"):
-        try:
-            # 1️⃣ Remove font name artifacts
-            text = re.sub(
-                r"(?i)(?:\b(?:calibri|arial|times new roman|cambria|courier new|verdana|"
-                r"tahoma|georgia|helvetica)\b[;:\s]*)+",
-                " ",
-                text,
-            )
-
-            # 2️⃣ Remove extra punctuation and invisible characters
-            text = re.sub(r"[;:\|\u200b]+", " ", text)
-            text = re.sub(r"\s{2,}", " ", text).strip()
-
-            # 3️⃣ Keep only meaningful first lines
-            lines = [l.strip() for l in text.splitlines() if l.strip()]
-            lines = [
-                l
-                for l in lines
-                if not re.match(r"(?i)^(calibri|arial|times new roman|cambria|courier new)", l)
-            ]
-            clean_text = "\n".join(lines[:30])
-
-            # 4️⃣ Use SpaCy for name extraction
-            doc = nlp(clean_text)
-            for ent in doc.ents:
-                if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
-                    return ent.text.strip(), email
-
-        except Exception as e:
-            print("spaCy name extraction failed for .doc:", e)
-
-        print("spaCy name not found, using fallback heuristic")
-
-    # fallback heuristic for name detection
+    # --- 2️⃣ Split into lines and clean ---
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
+    # skip irrelevant font or metadata lines
+    skip_keywords = r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b"
+    stop_keywords = r"\b(?:Phone|Email|LinkedIn|CV|Resume|Profile)\b"
+
+    # --- 3️⃣ Look for likely name lines at the top of the resume ---
     for line in lines[:20]:
-        cline = clean_line(line)
-        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
-            candidate_name = cline.title()
+        if re.search(skip_keywords, line, re.IGNORECASE):
+            continue
+        if re.search(stop_keywords, line, re.IGNORECASE):
             break
 
-    if not candidate_name:
-        for line in lines[:15]:
-            cline = clean_line(line)
-            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
-                candidate_name = cline
-                break
+        cline = clean_line(line)
+        # Typical name pattern: 2–4 capitalized words
+        if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$", cline):
+            candidate_name = cline
+            break
 
+    # --- 4️⃣ Fallback: use spaCy PERSON entity near the start of the text ---
+    if not candidate_name:
+        doc = nlp(" ".join(lines[:40]))  # only check first part of resume
+        person_names = [ent.text.strip() for ent in doc.ents if ent.label_ == "PERSON"]
+        if person_names:
+            # Filter out false positives (like "Machine Learning", "Python", etc.)
+            for name in person_names:
+                if len(name.split()) <= 4 and all(w[0].isupper() for w in name.split()):
+                    candidate_name = name
+                    break
+
+    # --- 5️⃣ Fallback #2: if still none, look before the email address ---
     if not candidate_name and email:
         before_email = text.split(email)[0]
-        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
+        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})", before_email)
         if match:
             candidate_name = match.group(1)
 
@@ -271,6 +255,7 @@ def process():
         return jsonify({"error": "no fileData or textData provided"}), 400
 
     name, email = extract_name_email(text, filename)
+
 
     conn = db_connect()
     cur = conn.cursor()
