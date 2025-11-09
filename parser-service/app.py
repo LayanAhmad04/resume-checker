@@ -51,39 +51,77 @@ def extract_text(path):
 
 
 def clean_rtf(text):
-    """Remove basic RTF control sequences and braces."""
-    return re.sub(r"\\[a-z]+\d*|[{}]", "", text)
+    """Remove basic RTF control sequences and braces, collapse whitespace."""
+    if not text:
+        return text
+    # remove common RTF control words like \b, \par, \fs24, etc. and braces
+    cleaned = re.sub(r"\\[a-zA-Z]+\d*'?[a-zA-Z0-9]*|[{}]|\\'", " ", text)
+    # replace multiple non-letter runs with a single space (but keep dots for initials)
+    cleaned = re.sub(r"[^A-Za-z\.\s]+", " ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
 
 
 # name and email extraction
 def extract_name_email(text):
-    emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
+    # pre-clean RTF artifacts to make heuristics reliable (harmless for non-RTF)
+    cleaned_text = clean_rtf(text)
+
+    emails = re.findall(r"[\w\.-]+@[\w\.-]+", cleaned_text)
     email = emails[0] if emails else None
 
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    lines = [l.strip() for l in cleaned_text.splitlines() if l.strip()]
     candidate_name = None
 
     def clean_line(line):
-        return re.sub(r"[^A-Za-z\s]", "", line).strip()
+        # keep letters, spaces and dots (for initials)
+        return re.sub(r"[^A-Za-z\.\s]", "", line).strip()
 
+    # 1) ALL CAPS line (common in resumes)
     for line in lines[:20]:
         cline = clean_line(line)
-        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
+        # consider uppercase lines that contain letters and spaces and at least 2 words
+        if cline and re.match(r"^[A-Z\.\s]{3,}$", cline) and 2 <= len(cline.split()) <= 5:
             candidate_name = cline.title()
             break
 
+    # 2) Title case name like "Alex Morgan" or "Alex R. Morgan"
     if not candidate_name:
-        for line in lines[:15]:
+        for line in lines[:20]:
             cline = clean_line(line)
-            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
-                candidate_name = cline
-                break
+            if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z]\.?|(?:\s+[A-Z][a-z]+))+", cline):
+                # take first reasonable-looking title-case line
+                parts = cline.split()
+                if 2 <= len(parts) <= 5:
+                    candidate_name = cline
+                    break
 
+    # 3) Before-email heuristic (text immediately before email often contains name/phone)
     if not candidate_name and email:
-        before_email = text.split(email)[0]
-        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
+        before_email = cleaned_text.split(email)[0]
+        # take last 200 chars before the email and search
+        ctx = before_email[-300:]
+        # look for a Name pattern in that chunk
+        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)", ctx)
         if match:
-            candidate_name = match.group(1)
+            candidate_name = match.group(1).strip()
+
+    # 4) spaCy PERSON entity fallback — helpful on messy text where simple heuristics fail
+    if not candidate_name:
+        try:
+            doc = nlp(cleaned_text[:5000])  # limit length for speed
+            for ent in doc.ents:
+                if ent.label_ == "PERSON":
+                    name_candidate = ent.text.strip()
+                    # basic validation: at least two tokens and alphabetic characters
+                    tokens = [t for t in name_candidate.split() if re.search(r"[A-Za-z]", t)]
+                    if len(tokens) >= 2 and 2 <= len(tokens) <= 5:
+                        # strip weird chars, keep dots (initials)
+                        candidate_name = re.sub(r"[^A-Za-z\.\s]", "", name_candidate).strip()
+                        break
+        except Exception:
+            # don't crash on spaCy errors — leave candidate_name as None
+            pass
 
     return candidate_name, email
 
