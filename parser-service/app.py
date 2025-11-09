@@ -263,7 +263,8 @@ def process():
     else:
         return jsonify({"error": "no fileData or textData provided"}), 400
 
-    name, email = extract_name_email(text)
+    name, email = extract_name_email(text, filename)
+
 
     conn = db_connect()
     cur = conn.cursor()
