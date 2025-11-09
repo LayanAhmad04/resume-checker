@@ -5,70 +5,34 @@ The AI Resume Checker is a full-stack application that automatically evaluates r
 It allows recruiters or job platforms to efficiently analyze resumes against specific job descriptions and criteria such as skills, experience, education, portfolio, and location.  
 Each candidate receives a detailed score breakdown and justification for how well they fit the role.
 
-This project integrates Natural Language Processing (NLP) and large language models (OpenAI GPT) to provide semantic understanding and scoring.  
-It is built using a modular microservice architecture consisting of a Node.js backend API, a Python-based parser service, and a React frontend.
-
----
-
 ## Features
 
 ### AI-Powered Resume Evaluation
-Uses OpenAI’s GPT model to compare resumes with job descriptions and produce weighted scores and justifications.
+- Uses OpenAI’s GPT model to compare resumes with job descriptions and produce weighted scores and justifications.
 
 ### Resume Parsing and Information Extraction
-Automatically extracts candidate name, email, and text content from PDF, DOCX, and TXT resumes using spaCy and PyMuPDF.
+- Automatically extracts candidate name, email, and text content from PDF, DOCX, and TXT resumes using spaCy and PyMuPDF.
 
 ### Configurable Scoring Criteria
-Define and adjust weights for categories like skills, experience, education, portfolio, and location through the dashboard.
+- Define and adjust weights for categories like skills, experience, education, portfolio, and location through the dashboard.
+
+### Editable Scoring Weights
+- Modify scoring weights even after they have been initially set. The updated weights can be saved and applied to future evaluations.
+
+### Re-Evaluate Candidates
+- Re-evaluate a candidate’s resume using the latest scoring weights without needing to re-upload the file. This ensures that changes in criteria are reflected in the candidate’s updated AI-generated score and justification.
 
 ### Job and Candidate Management
-Add jobs, upload resumes, and view structured scoring outputs through an interactive UI.
+- Add jobs, delete jobs, upload resumes, and view structured scoring outputs through an interactive UI.
 
 ### Secure and Modular Architecture
-Separate backend and parser services improve maintainability and fault isolation.
-
-### Dark, Modern Frontend
-Built with React and TailwindCSS for a sleek and professional interface.
-
----
-
-## Tech Stack
-
-### Frontend
-- React (Vite)
-- TailwindCSS
-- Axios
-
-### Backend (API Server)
-- Node.js (Express)
-- PostgreSQL
-- JWT Authentication
-- OpenAI API
-
-### Parser Service
-- Python (Flask)
-- spaCy (NLP)
-- PyMuPDF (fitz) for PDF parsing
-- python-docx for DOCX parsing
-- psycopg2 for database communication
-- OpenAI Python SDK
-
----
-
-## Architecture Overview
-The system consists of three main services that communicate over REST APIs:
-
-1. **Frontend (React)** – User interface for managing jobs and candidates.  
-2. **Backend (Node.js)** – Handles API requests, authentication, and data persistence in PostgreSQL.  
-3. **Parser Service (Python)** – Processes uploaded resumes, extracts text, calls OpenAI for scoring, and updates the database.
+- Separate backend and parser services improve maintainability and fault isolation.
 
 ### Flow
 1. A recruiter uploads a candidate’s resume through the frontend.  
 2. The backend sends the resume to the parser service.  
 3. The parser extracts relevant text, analyzes it using OpenAI, computes weighted scores, and stores the results in the database.  
 4. The frontend displays parsed data, subscores, and overall evaluation.
-
----
 
 ## Setup and Installation
 
@@ -181,8 +145,6 @@ Synchronizing communication between Node.js (backend) and Flask (parser) service
 Handling different resume formats and file types was challenging. Some PDFs had poor text extraction, requiring multiple parsing strategies and fallback mechanisms.
 3. Reliable AI Scoring
 OpenAI sometimes returns responses with formatting errors or missing fields. The parser includes strict JSON validation and fallback scoring logic to handle such cases.
-4. Database Schema Design
-Designing relational consistency between jobs and candidates, and storing structured scoring data (subscores, reasons, total score) in JSON fields required careful consideration.
 
 ## Favorite Features and Highlights
 Dynamic Scoring Weights
