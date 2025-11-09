@@ -5,6 +5,8 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs, 
     const [show, setShow] = useState(open);
     const [closing, setClosing] = useState(false);
     const [localCandidate, setCandidate] = useState(candidate);
+    const [loading, setLoading] = useState(false);
+
 
     useEffect(() => {
         setCandidate(candidate);
@@ -112,7 +114,9 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs, 
 
                         <button
                             className="reeval-btn"
+                            disabled={loading}
                             onClick={async () => {
+                                setLoading(true);
                                 try {
                                     const res = await fetch(`${import.meta.env.VITE_API_BASE}/candidates/${candidate.id}/reeval`, {
                                         method: "POST",
@@ -132,11 +136,18 @@ export default function CandidateDetailsModal({ open, onClose, candidate, jobs, 
                                 } catch (err) {
                                     console.error("Re-evaluation failed:", err);
                                     alert("Re-evaluation failed. Please check backend logs.");
+                                } finally {
+                                    setLoading(false);
                                 }
                             }}
                         >
-                            Re-evaluate
+                            {loading ? (
+                                <div className="spinner"></div>
+                            ) : (
+                                "Re-evaluate"
+                            )}
                         </button>
+
 
 
                         {Object.keys(subscores).length === 0 ? (
