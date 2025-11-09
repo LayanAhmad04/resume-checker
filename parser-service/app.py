@@ -67,44 +67,17 @@ def extract_name_email(text, file_ext=None):
                 "",
                 text,
             )
-
-            text = re.sub(
-                r"(?i)(?:[;:\s]*\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b[;:\s]*)+",
-                " ",
-                text,
-            )
-
+            text = re.sub(r"[{}\\]+", " ", text) 
             text = re.sub(r"\s{2,}", " ", text).strip()
 
             lines = [l.strip() for l in text.splitlines() if l.strip()]
-            clean_text = "\n".join(lines[:30])
+            clean_text = "\n".join(lines[:25])
 
             doc = nlp(clean_text)
-            COMMON_NON_NAMES = {
-                "machine learning", "data science", "data scientist", "software engineering",
-                "software engineer", "artificial intelligence", "deep learning", "python",
-                "docker", "aws", "project management"
-            }
-
             for ent in doc.ents:
-                if ent.label_ == "PERSON":
-                    name_candidate = ent.text.strip()
-                    name_clean = name_candidate.lower()
-
-                    # Skip if it's clearly a skill or tech term
-                    if any(term in name_clean for term in COMMON_NON_NAMES):
-                        continue
-
-                    # Skip if it's unusually long or short
-                    if not (2 <= len(name_candidate.split()) <= 4):
-                        continue
-
-                    # Skip if it contains digits or symbols
-                    if re.search(r"[\d@\-_/]", name_candidate):
-                        continue
-
-                    return name_candidate, email
-
+                if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
+                    if not re.search(r"Machine Learning|Data Science|Deep Learning", ent.text, re.I):
+                        return ent.text.strip(), email
 
         except Exception as e:
             print("spaCy name extraction failed for .doc:", e)
@@ -126,8 +99,9 @@ def extract_name_email(text, file_ext=None):
         for line in lines[:15]:
             cline = clean_line(line)
             if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
-                candidate_name = cline
-                break
+                if not re.search(r"Machine Learning|Data Science|Deep Learning|Intern|Engineer", cline, re.I):
+                    candidate_name = cline
+                    break
 
     if not candidate_name and email:
         before_email = text.split(email)[0]
@@ -136,6 +110,7 @@ def extract_name_email(text, file_ext=None):
             candidate_name = match.group(1)
 
     return candidate_name, email
+
 
 # database connection
 def db_connect():
