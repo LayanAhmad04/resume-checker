@@ -57,63 +57,60 @@ def clean_rtf(text):
 
 # name and email extraction
 def extract_name_email(text, file_ext=None):
+    # Extract email
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-    if file_ext and file_ext.lower().endswith(".doc"):
-        try:
-            text = re.sub(
-                r"(?i)\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b",
-                "",
-                text,
-            )
-
-            text = re.sub(
-                r"(?i)(?:[;:\s]*\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b[;:\s]*)+",
-                " ",
-                text,
-            )
-
-            text = re.sub(r"\s{2,}", " ", text).strip()
-
-            lines = [l.strip() for l in text.splitlines() if l.strip()]
-            clean_text = "\n".join(lines[:30])
-
-            doc = nlp(clean_text)
-            for ent in doc.ents:
-                if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
-                    return ent.text.strip(), email
-
-        except Exception as e:
-            print("spaCy name extraction failed for .doc:", e)
-        print("spaCy name not found, using fallback heuristic")
-
     lines = [l.strip() for l in text.splitlines() if l.strip()]
+
+    # --- Clean out font/metadata lines ---
+    if file_ext and file_ext.lower().endswith(".doc"):
+        font_keywords = r"\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b"
+        lines = [re.sub(font_keywords, "", l, flags=re.I).strip() for l in lines]
+        lines = [l for l in lines if l]  # remove empty lines
+
     candidate_name = None
+
+    # --- Skip lines that look like section titles, skills, or headings ---
+    blacklist_keywords = r"\b(?:phone|email|linkedin|cv|resume|profile|skills|experience|projects|education|machine learning|python|docker|algorithms)\b"
 
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
     for line in lines[:20]:
+        if re.search(blacklist_keywords, line, re.I):
+            continue
         cline = clean_line(line)
-        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
+        # All-caps or Title Case names, 2-4 words
+        if re.match(r"^[A-Z\s]{2,}$", cline) and 2 <= len(cline.split()) <= 4:
             candidate_name = cline.title()
             break
+        if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$", cline):
+            candidate_name = cline
+            break
 
+    # --- Fallback: spaCy PERSON detection ---
     if not candidate_name:
-        for line in lines[:15]:
-            cline = clean_line(line)
-            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
-                candidate_name = cline
-                break
+        clean_text = "\n".join(lines[:40])
+        doc = nlp(clean_text)
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text.strip()
+                if 2 <= len(name.split()) <= 4 and all(w[0].isupper() for w in name.split()):
+                    # avoid skills/headers
+                    if not re.search(blacklist_keywords, name, re.I):
+                        candidate_name = name
+                        break
 
+    # --- Fallback #2: look before email ---
     if not candidate_name and email:
         before_email = text.split(email)[0]
-        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
+        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})", before_email)
         if match:
             candidate_name = match.group(1)
 
     return candidate_name, email
+
 
 # database connection
 def db_connect():
