@@ -13,7 +13,6 @@
   - [Information Extraction](#information-extraction)
   - [Scoring Logic](#scoring-logic)
   - [Error Handling](#error-handling)
-- [Workflow](#workflow)
 - [Development Challenges](#development-challenges)
 - [Favorite Features and Highlights](#favorite-features-and-highlights)
 
