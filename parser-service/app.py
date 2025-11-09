@@ -58,22 +58,38 @@ def clean_rtf(text):
 # name and email extraction
 def extract_name_email(text, file_ext=None):
     """
-    Extracts candidate name and email from resume text.
-    Uses a more reliable heuristic for PDFs/DOCX,
-    and a spaCy-based extractor for DOC files.
+    Extract candidate name and email from resume text.
+    Uses a spaCy NER extractor for .doc files (after cleaning),
+    and heuristic pattern matching for PDF/DOCX files.
     """
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
+
     if file_ext and file_ext.lower().endswith(".doc"):
         try:
-            doc = nlp(text)
+
+            font_cleanup = re.sub(
+                r"(?i)(?:\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b\s*;?\s*)+",
+                "",
+                text,
+            )
+
+            lines = [l.strip() for l in font_cleanup.splitlines() if l.strip()]
+            cleaned_lines = []
+            for line in lines:
+                if not re.match(r"(?i)^(?:[A-Za-z]+\s*;){2,}", line):
+                    cleaned_lines.append(line)
+            clean_text = "\n".join(cleaned_lines)
+
+            doc = nlp(clean_text)
             for ent in doc.ents:
-                if ent.label_ == "PERSON":
+                if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
                     return ent.text.strip(), email
+
         except Exception as e:
             print("spaCy name extraction failed for .doc:", e)
-        print("spaCy name not found, using fallback")
+        print("spaCy name not found, using fallback heuristic")
 
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
