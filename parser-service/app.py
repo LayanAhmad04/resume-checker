@@ -63,41 +63,39 @@ def extract_name_email(text, file_ext=None):
 
     lines = [l.strip() for l in text.splitlines() if l.strip()]
 
-    # --- Clean out font/metadata lines ---
+    # --- Clean font/metadata words in DOC ---
     if file_ext and file_ext.lower().endswith(".doc"):
         font_keywords = r"\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b"
         lines = [re.sub(font_keywords, "", l, flags=re.I).strip() for l in lines]
-        lines = [l for l in lines if l]  # remove empty lines
+        lines = [l for l in lines if l]
 
     candidate_name = None
 
-    # --- Skip lines that look like section titles, skills, or headings ---
-    blacklist_keywords = r"\b(?:phone|email|linkedin|cv|resume|profile|skills|experience|projects|education|machine learning|python|docker|algorithms)\b"
+    # --- Blacklist common headers, skills, and phrases ---
+    blacklist_keywords = r"\b(?:phone|email|linkedin|cv|resume|profile|skills|experience|projects|education|machine learning|python|docker|algorithms|professional summary|summary|objective|contact)\b"
 
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
+    # --- Heuristic: pick first line near top that looks like a real name ---
     for line in lines[:20]:
         if re.search(blacklist_keywords, line, re.I):
             continue
         cline = clean_line(line)
-        # All-caps or Title Case names, 2-4 words
-        if re.match(r"^[A-Z\s]{2,}$", cline) and 2 <= len(cline.split()) <= 4:
+        words = cline.split()
+        if 2 <= len(words) <= 4 and all(w[0].isupper() for w in words):
             candidate_name = cline.title()
             break
-        if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$", cline):
-            candidate_name = cline
-            break
 
-    # --- Fallback: spaCy PERSON detection ---
+    # --- Fallback: spaCy PERSON detection on first 40 lines ---
     if not candidate_name:
         clean_text = "\n".join(lines[:40])
         doc = nlp(clean_text)
         for ent in doc.ents:
             if ent.label_ == "PERSON":
                 name = ent.text.strip()
-                if 2 <= len(name.split()) <= 4 and all(w[0].isupper() for w in name.split()):
-                    # avoid skills/headers
+                words = name.split()
+                if 2 <= len(words) <= 4 and all(w[0].isupper() for w in words):
                     if not re.search(blacklist_keywords, name, re.I):
                         candidate_name = name
                         break
@@ -106,11 +104,10 @@ def extract_name_email(text, file_ext=None):
     if not candidate_name and email:
         before_email = text.split(email)[0]
         match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})", before_email)
-        if match:
+        if match and not re.search(blacklist_keywords, match.group(1), re.I):
             candidate_name = match.group(1)
 
     return candidate_name, email
-
 
 # database connection
 def db_connect():
