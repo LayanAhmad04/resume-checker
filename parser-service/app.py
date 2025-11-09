@@ -58,18 +58,24 @@ def extract_name_email(text):
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
+    def clean_line(line):
+        return re.sub(r"[^A-Za-z\s]", "", line).strip()
+
     for line in lines[:20]:
-        if re.match(r"^[A-Z\s]{3,}$", line) and 2 <= len(line.split()) <= 4:
-            candidate_name = line.title()
+        cline = clean_line(line)
+        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
+            candidate_name = cline.title()
             break
 
     if not candidate_name:
         for line in lines[:15]:
-            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", line):
-                candidate_name = line.strip()
+            cline = clean_line(line)
+            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
+                candidate_name = cline
                 break
 
     return candidate_name, email
+
 
 # database connection
 def db_connect():
