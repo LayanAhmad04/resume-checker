@@ -66,25 +66,23 @@ def extract_name_email(text):
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
+    # Skip obvious font lines
+    skip_keywords = r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b"
+
+    # Stop at these keywords
+    stop_keywords = r"\b(?:Phone|Email|LinkedIn|CV|Resume)\b"
+
     for line in lines[:20]:
-        if re.search(r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b", line, re.IGNORECASE):
-            continue  
+        if re.search(skip_keywords, line, re.IGNORECASE):
+            continue
+        if re.search(stop_keywords, line, re.IGNORECASE):
+            break  # stop before reaching phone/email/linkedin
         cline = clean_line(line)
-        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
-            candidate_name = cline.title()
+        if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z]\.?[a-z]*){1,3}$", cline):
+            candidate_name = cline
             break
 
-
-    if not candidate_name:
-        for line in lines[:15]:
-            if re.search(r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b", line, re.IGNORECASE):
-                continue
-            cline = clean_line(line)
-            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
-                candidate_name = cline
-                break
-
-
+    # fallback: look before email
     if not candidate_name and email:
         before_email = text.split(email)[0]
         match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
@@ -92,6 +90,7 @@ def extract_name_email(text):
             candidate_name = match.group(1)
 
     return candidate_name, email
+
 
 
 # database connection
