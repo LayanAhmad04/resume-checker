@@ -40,8 +40,10 @@ def extract_text(path):
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
         elif low.endswith(".doc"):
+            # read raw bytes, decode, then clean RTF/control chars
             with open(path, "rb") as f:
-                return f.read().decode("utf-8", errors="ignore")
+                raw_text = f.read().decode("utf-8", errors="ignore")
+            return clean_rtf(raw_text)
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
@@ -61,42 +63,39 @@ def extract_name_email(text):
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-    # --- 2️⃣ Split into lines and clean ---
+    # --- 2️⃣ Split lines and clean ---
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
-    # skip irrelevant font or metadata lines
+    # skip font/metadata lines
     skip_keywords = r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b"
     stop_keywords = r"\b(?:Phone|Email|LinkedIn|CV|Resume|Profile)\b"
 
-    # --- 3️⃣ Look for likely name lines at the top of the resume ---
     for line in lines[:20]:
         if re.search(skip_keywords, line, re.IGNORECASE):
-            continue
+            continue  # skip font names
         if re.search(stop_keywords, line, re.IGNORECASE):
             break
 
         cline = clean_line(line)
-        # Typical name pattern: 2–4 capitalized words
         if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$", cline):
             candidate_name = cline
             break
 
-    # --- 4️⃣ Fallback: use spaCy PERSON entity near the start of the text ---
+    # fallback: spaCy PERSON detection on first 40 lines
     if not candidate_name:
-        doc = nlp(" ".join(lines[:40]))  # only check first part of resume
-        person_names = [ent.text.strip() for ent in doc.ents if ent.label_ == "PERSON"]
-        if person_names:
-            # Filter out false positives (like "Machine Learning", "Python", etc.)
-            for name in person_names:
+        doc = nlp(" ".join(lines[:40]))
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text.strip()
                 if len(name.split()) <= 4 and all(w[0].isupper() for w in name.split()):
                     candidate_name = name
                     break
 
-    # --- 5️⃣ Fallback #2: if still none, look before the email address ---
+    # fallback #2: look before email
     if not candidate_name and email:
         before_email = text.split(email)[0]
         match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})", before_email)
