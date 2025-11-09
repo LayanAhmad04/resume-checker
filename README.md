@@ -8,11 +8,6 @@
   - [1. Backend Setup](#1-backend-setup)
   - [2. Parser Service Setup](#2-parser-service-setup)
   - [3. Frontend Setup](#3-frontend-setup)
-- [How the Parser Works](#how-the-parser-works)
-  - [File Extraction](#file-extraction)
-  - [Information Extraction](#information-extraction)
-  - [Scoring Logic](#scoring-logic)
-  - [Error Handling](#error-handling)
 - [Development Challenges](#development-challenges)
 - [Favorite Features and Highlights](#favorite-features-and-highlights)
 
@@ -27,7 +22,7 @@ Each candidate receives a detailed score breakdown and justification for how wel
 - Uses OpenAI’s GPT model to compare resumes with job descriptions and produce weighted scores and justifications.
 
 ### Resume Parsing and Information Extraction
-- Automatically extracts candidate name, email, and text content from PDF, DOCX, and TXT resumes using spaCy and PyMuPDF.
+- Automatically extracts candidate name, email, and text content from PDF, DOCX, DOC, and TXT resumes using spaCy and PyMuPDF.
 
 ### Configurable Scoring Criteria
 - Define and adjust weights for categories like skills, experience, education, portfolio, and location through the dashboard.
@@ -128,25 +123,6 @@ Vite will start the app at:
 ```bash
 http://localhost:5173
 ```
-
-## How the Parser Works
-### File Extraction
-- PDF resumes are read using fitz (PyMuPDF).
-- DOCX resumes are read using python-docx.
-- Plain text resumes are read directly.
-  
-### Information Extraction
-- Uses regex and pattern heuristics to identify candidate name and email.
-- spaCy is available for more advanced NLP if needed.
-  
-### Scoring Logic
-- The parser fetches the job’s criteria and description from the database.
-- It sends the job description, resume text, and normalized criteria weights to OpenAI.
-- OpenAI returns subscores, justifications, and an overall score out of 10 in structured JSON format.
-- The parser validates the response and stores the results in PostgreSQL.
-  
-### Error Handling
-- If OpenAI returns invalid JSON or fails, fallback scoring (neutral 0.5 per criterion) is used to maintain continuity.
 
 ## Development Challenges
 1. Multi-Service Coordination
