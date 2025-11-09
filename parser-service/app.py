@@ -32,11 +32,9 @@ def extract_text(path):
     try:
         low = path.lower()
         if low.endswith(".pdf"):
-            import fitz
             doc = fitz.open(path)
             return "\n".join([p.get_text() or "" for p in doc])
         elif low.endswith(".docx"):
-            import docx
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
         elif low.endswith(".doc"):
@@ -60,36 +58,31 @@ def extract_name_email(text, file_ext=None):
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
+    # special cleanup for .doc files (to remove font names like "Calibri; Arial")
     if file_ext and file_ext.lower().endswith(".doc"):
-            try:
-                text = re.sub(
-                    r"(?i)(?:\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b[;:\s]*)+",
-                    " ",
-                    text,
-                )
+        try:
+            # 1️⃣ Remove font name artifacts
+            text = re.sub(
+                r"(?i)(?:\b(?:calibri|arial|times new roman|cambria|courier new|verdana|"
+                r"tahoma|georgia|helvetica)\b[;:\s]*)+",
+                " ",
+                text,
+            )
 
-                text = re.sub(r"[;:\|\u200b]+", " ", text)
-                text = re.sub(r"\s{2,}", " ", text).strip()
-
-                lines = [l.strip() for l in text.splitlines() if l.strip()]
-                lines = [l for l in lines if not re.match(r"(?i)^(calibri|arial|times new roman|cambria|courier new)", l)]
-                clean_text = "\n".join(lines[:30])
-
-                doc = nlp(clean_text)
-                for ent in doc.ents:
-                    if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
-                        return ent.text.strip(), email
-
-            except Exception as e:
-                print("spaCy name extraction failed for .doc:", e)
-            print("spaCy name not found, using fallback heuristic")
-
-
+            # 2️⃣ Remove extra punctuation and invisible characters
+            text = re.sub(r"[;:\|\u200b]+", " ", text)
             text = re.sub(r"\s{2,}", " ", text).strip()
 
+            # 3️⃣ Keep only meaningful first lines
             lines = [l.strip() for l in text.splitlines() if l.strip()]
+            lines = [
+                l
+                for l in lines
+                if not re.match(r"(?i)^(calibri|arial|times new roman|cambria|courier new)", l)
+            ]
             clean_text = "\n".join(lines[:30])
 
+            # 4️⃣ Use SpaCy for name extraction
             doc = nlp(clean_text)
             for ent in doc.ents:
                 if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
@@ -97,8 +90,10 @@ def extract_name_email(text, file_ext=None):
 
         except Exception as e:
             print("spaCy name extraction failed for .doc:", e)
+
         print("spaCy name not found, using fallback heuristic")
 
+    # fallback heuristic for name detection
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
@@ -125,6 +120,7 @@ def extract_name_email(text, file_ext=None):
             candidate_name = match.group(1)
 
     return candidate_name, email
+
 
 # database connection
 def db_connect():
@@ -275,7 +271,6 @@ def process():
         return jsonify({"error": "no fileData or textData provided"}), 400
 
     name, email = extract_name_email(text, filename)
-
 
     conn = db_connect()
     cur = conn.cursor()
