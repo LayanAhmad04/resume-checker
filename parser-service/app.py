@@ -31,16 +31,23 @@ def extract_text(path):
     try:
         low = path.lower()
         if low.endswith(".pdf"):
-            return extract_text_from_pdf(path)
+            import fitz
+            doc = fitz.open(path)
+            return "\n".join([p.get_text() or "" for p in doc])
         elif low.endswith(".docx"):
-            return extract_text_from_docx(path)
-
+            import docx
+            doc = docx.Document(path)
+            return "\n".join([p.text for p in doc.paragraphs if p.text])
+        elif low.endswith(".doc"):
+            with open(path, "rb") as f:
+                return f.read().decode("utf-8", errors="ignore")
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
     except Exception as e:
         print("extract_text error:", e)
         return ""
+
 
 
 # name and email extraction
