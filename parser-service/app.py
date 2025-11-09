@@ -61,23 +61,39 @@ def extract_name_email(text, file_ext=None):
     email = emails[0] if emails else None
 
     if file_ext and file_ext.lower().endswith(".doc"):
-        try:
-            text = re.sub(
-                r"(?i)\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b",
-                "",
-                text,
-            )
-            text = re.sub(r"[{}\\]+", " ", text) 
+            try:
+                text = re.sub(
+                    r"(?i)(?:\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b[;:\s]*)+",
+                    " ",
+                    text,
+                )
+
+                text = re.sub(r"[;:\|\u200b]+", " ", text)
+                text = re.sub(r"\s{2,}", " ", text).strip()
+
+                lines = [l.strip() for l in text.splitlines() if l.strip()]
+                lines = [l for l in lines if not re.match(r"(?i)^(calibri|arial|times new roman|cambria|courier new)", l)]
+                clean_text = "\n".join(lines[:30])
+
+                doc = nlp(clean_text)
+                for ent in doc.ents:
+                    if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
+                        return ent.text.strip(), email
+
+            except Exception as e:
+                print("spaCy name extraction failed for .doc:", e)
+            print("spaCy name not found, using fallback heuristic")
+
+
             text = re.sub(r"\s{2,}", " ", text).strip()
 
             lines = [l.strip() for l in text.splitlines() if l.strip()]
-            clean_text = "\n".join(lines[:25])
+            clean_text = "\n".join(lines[:30])
 
             doc = nlp(clean_text)
             for ent in doc.ents:
                 if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
-                    if not re.search(r"Machine Learning|Data Science|Deep Learning", ent.text, re.I):
-                        return ent.text.strip(), email
+                    return ent.text.strip(), email
 
         except Exception as e:
             print("spaCy name extraction failed for .doc:", e)
@@ -99,9 +115,8 @@ def extract_name_email(text, file_ext=None):
         for line in lines[:15]:
             cline = clean_line(line)
             if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
-                if not re.search(r"Machine Learning|Data Science|Deep Learning|Intern|Engineer", cline, re.I):
-                    candidate_name = cline
-                    break
+                candidate_name = cline
+                break
 
     if not candidate_name and email:
         before_email = text.split(email)[0]
@@ -110,7 +125,6 @@ def extract_name_email(text, file_ext=None):
             candidate_name = match.group(1)
 
     return candidate_name, email
-
 
 # database connection
 def db_connect():
