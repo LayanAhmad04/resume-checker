@@ -76,10 +76,138 @@ The system consists of three main services that communicate over REST APIs:
 ```bash
 cd path/to/resume-checker/backend
 npm install
-
-
-
+```
 Create a .env file:
+```bash
+PORT=4000
+DB_HOST=your_postgres_host
+DB_PORT=5432
+DB_USER=your_user
+DB_PASS=your_password
+DB_NAME=resume_checker
+PARSER_SERVICE_URL=http://localhost:5000
+OPENAI_API_KEY=your_openai_key
+JWT_SECRET=replace_with_secure_val
+UPLOAD_DIR=uploads
+```
 Run database migrations:
+```bash
+psql -U postgres -d resume_checker -f ../db/migrations.sql
+```
 Start the backend:
+```bash
+node src/index.js
+```
 Expected output:
+```bash
+Backend listening 4000
+```
+### 2. Parser Service Setup
+```bash
+cd ../parser-service
+pip install -r requirements.txt
+```
+Create a .env file:
+```bash
+DB_HOST=your_postgres_host
+DB_PORT=5432
+DB_USER=your_user
+DB_PASS=your_password
+DB_NAME=resume_checker
+PARSER_PORT=5000
+OPENAI_API_KEY=your_openai_key
+BACKEND_URL=http://localhost:4000
+UPLOAD_DIR=../uploads
+```
+Download spaCy model:
+```bash
+python -m spacy download en_core_web_sm
+```
+Run the parser service:
+```bash
+python app.py
+```
+Expected output:
+```bash
+ * Running on http://0.0.0.0:5000
+```
+### 3. Frontend Setup
+```bash
+cd ../frontend
+npm install
+```
+Create a .env file:
+```bash
+VITE_API_BASE=http://localhost:4000/api
+````
+Run the frontend:
+```bash
+npm run dev
+```
+Vite will start the app at:
+```bash
+http://localhost:5173
+```
+
+## How the Parser Works
+### File Extraction
+- PDF resumes are read using fitz (PyMuPDF).
+- DOCX resumes are read using python-docx.
+- Plain text resumes are read directly.
+  
+### Information Extraction
+- Uses regex and pattern heuristics to identify candidate name and email.
+- spaCy is available for more advanced NLP if needed.
+  
+### Scoring Logic
+- The parser fetches the job’s criteria and description from the database.
+- It sends the job description, resume text, and normalized criteria weights to OpenAI.
+- OpenAI returns subscores, justifications, and an overall score out of 10 in structured JSON format.
+- The parser validates the response and stores the results in PostgreSQL.
+  
+### Error Handling
+- If OpenAI returns invalid JSON or fails, fallback scoring (neutral 0.5 per criterion) is used to maintain continuity.
+
+## Workflow
+- A candidate’s resume is uploaded.
+- The backend forwards the file to /process on the parser service.
+- The parser extracts the resume text, candidate name, and email, then queries the job criteria, calls OpenAI for scoring, and finally saves all results including subscores, reasons, total score, and justification to the candidates table.
+- The frontend displays the parsed resume data and the computed AI score.
+
+## Development Challenges
+1. Multi-Service Coordination
+Synchronizing communication between Node.js (backend) and Flask (parser) services required handling asynchronous requests, error recovery, and consistent database updates.
+2. Resume Parsing Accuracy
+Handling different resume formats and file types was challenging. Some PDFs had poor text extraction, requiring multiple parsing strategies and fallback mechanisms.
+3. Reliable AI Scoring
+OpenAI sometimes returns responses with formatting errors or missing fields. The parser includes strict JSON validation and fallback scoring logic to handle such cases.
+4. Database Schema Design
+Designing relational consistency between jobs and candidates, and storing structured scoring data (subscores, reasons, total score) in JSON fields required careful consideration.
+
+## Favorite Features and Highlights
+Dynamic Scoring Weights
+- The ability to dynamically adjust weight values for each evaluation criterion adds flexibility and makes the system highly customizable for different job roles.
+AI Justification Texts
+- Integrating OpenAI to generate concise and human-readable justifications for scores adds transparency and insight to the evaluation process.
+Seamless Resume Parsing Flow
+- Combining PDF parsing, NLP extraction, and OpenAI scoring in one unified pipeline was both complex and rewarding to implement.
+Frontend Visualization
+- Seeing AI scores and subscores visualized in the UI makes the experience intuitive and practical for recruiters.
+
+## Contributing
+To contribute:
+```bash
+git clone https://github.com/yourusername/resume-checker.git
+cd resume-checker
+git checkout -b feature/your-feature
+```
+Once done, open a pull request describing your changes.
+
+License
+This project is distributed under the MIT License.
+You are free to use, modify, and distribute this software with attribution.
+
+
+---
+
+✅ You can copy this entire block directly into your `README.md` file — GitHub will render all sections correctly, with headings, co
