@@ -71,13 +71,11 @@ def extract_name_email(text, file_ext=None):
 
     candidate_name = None
 
-    # --- Blacklist common headers, skills, and phrases ---
     blacklist_keywords = r"\b(?:phone|email|linkedin|cv|resume|profile|skills|experience|projects|education|machine learning|python|docker|algorithms|professional summary|summary|objective|contact)\b"
 
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
-    # --- Heuristic: pick first line near top that looks like a real name ---
     for line in lines[:20]:
         if re.search(blacklist_keywords, line, re.I):
             continue
@@ -87,7 +85,6 @@ def extract_name_email(text, file_ext=None):
             candidate_name = cline.title()
             break
 
-    # --- Fallback: spaCy PERSON detection on first 40 lines ---
     if not candidate_name:
         clean_text = "\n".join(lines[:40])
         doc = nlp(clean_text)
@@ -100,7 +97,6 @@ def extract_name_email(text, file_ext=None):
                         candidate_name = name
                         break
 
-    # --- Fallback #2: look before email ---
     if not candidate_name and email:
         before_email = text.split(email)[0]
         match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})", before_email)
