@@ -1,5 +1,22 @@
 # AI Resume Checker
 
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Flow](#flow)
+- [Setup and Installation](#setup-and-installation)
+  - [1. Backend Setup](#1-backend-setup)
+  - [2. Parser Service Setup](#2-parser-service-setup)
+  - [3. Frontend Setup](#3-frontend-setup)
+- [How the Parser Works](#how-the-parser-works)
+  - [File Extraction](#file-extraction)
+  - [Information Extraction](#information-extraction)
+  - [Scoring Logic](#scoring-logic)
+  - [Error Handling](#error-handling)
+- [Workflow](#workflow)
+- [Development Challenges](#development-challenges)
+- [Favorite Features and Highlights](#favorite-features-and-highlights)
+
 ## Overview
 The AI Resume Checker is a full-stack application that automatically evaluates resumes using artificial intelligence.  
 It allows recruiters or job platforms to efficiently analyze resumes against specific job descriptions and criteria such as skills, experience, education, portfolio, and location.  
@@ -28,7 +45,7 @@ Each candidate receives a detailed score breakdown and justification for how wel
 ### Secure and Modular Architecture
 - Separate backend and parser services improve maintainability and fault isolation.
 
-### Flow
+## Flow
 1. A recruiter uploads a candidate’s resume through the frontend.  
 2. The backend sends the resume to the parser service.  
 3. The parser extracts relevant text, analyzes it using OpenAI, computes weighted scores, and stores the results in the database.  
@@ -155,21 +172,3 @@ Seamless Resume Parsing Flow
 - Combining PDF parsing, NLP extraction, and OpenAI scoring in one unified pipeline was both complex and rewarding to implement.
 Frontend Visualization
 - Seeing AI scores and subscores visualized in the UI makes the experience intuitive and practical for recruiters.
-
-## Contributing
-To contribute:
-```bash
-git clone https://github.com/yourusername/resume-checker.git
-cd resume-checker
-git checkout -b feature/your-feature
-```
-Once done, open a pull request describing your changes.
-
-License
-This project is distributed under the MIT License.
-You are free to use, modify, and distribute this software with attribution.
-
-
----
-
-✅ You can copy this entire block directly into your `README.md` file — GitHub will render all sections correctly, with headings, co
