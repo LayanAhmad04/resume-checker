@@ -4,6 +4,7 @@ import fitz
 import docx
 import spacy
 import psycopg2
+import textract
 from config import DB_DSN, OPENAI_KEY, PARSER_PORT
 from openai import OpenAI
 
@@ -33,8 +34,11 @@ def extract_text(path):
         low = path.lower()
         if low.endswith(".pdf"):
             return extract_text_from_pdf(path)
-        elif low.endswith(".docx") or low.endswith(".doc"):
+        elif low.endswith(".docx"):
             return extract_text_from_docx(path)
+        elif low.endswith(".doc"):
+            text = textract.process(path).decode("utf-8", errors="ignore")
+            return text
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
