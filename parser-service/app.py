@@ -6,7 +6,6 @@ import spacy
 import psycopg2
 from config import DB_DSN, OPENAI_KEY, PARSER_PORT
 from openai import OpenAI
-import pypandoc
 
 client = OpenAI(api_key=OPENAI_KEY)
 nlp = spacy.load("en_core_web_sm")
@@ -31,41 +30,24 @@ def extract_text_from_docx(path):
 
 def extract_text(path):
     try:
-        import os
-
         low = path.lower()
         if low.endswith(".pdf"):
             import fitz
             doc = fitz.open(path)
             return "\n".join([p.get_text() or "" for p in doc])
-
         elif low.endswith(".docx"):
             import docx
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
-
         elif low.endswith(".doc"):
-            import pypandoc
-            # Convert .doc → plain text using pypandoc
-            text = pypandoc.convert_text("", to="plain", format="doc", outputfile=None, extra_args=["--from=doc", path])
-            # The above line ensures conversion is done properly — if it fails, try fallback
-            if not text.strip():
-                # fallback: convert to docx then extract
-                temp_docx = os.path.splitext(path)[0] + "_converted.docx"
-                pypandoc.convert_file(path, "docx", outputfile=temp_docx)
-                import docx
-                doc = docx.Document(temp_docx)
-                text = "\n".join([p.text for p in doc.paragraphs if p.text])
-            return text
-
+            with open(path, "rb") as f:
+                return f.read().decode("utf-8", errors="ignore")
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
-
     except Exception as e:
         print("extract_text error:", e)
         return ""
-
 
 
 def clean_rtf(text):
