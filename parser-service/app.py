@@ -80,9 +80,31 @@ def extract_name_email(text, file_ext=None):
             clean_text = "\n".join(lines[:30])
 
             doc = nlp(clean_text)
+            COMMON_NON_NAMES = {
+                "machine learning", "data science", "data scientist", "software engineering",
+                "software engineer", "artificial intelligence", "deep learning", "python",
+                "docker", "aws", "project management"
+            }
+
             for ent in doc.ents:
-                if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
-                    return ent.text.strip(), email
+                if ent.label_ == "PERSON":
+                    name_candidate = ent.text.strip()
+                    name_clean = name_candidate.lower()
+
+                    # Skip if it's clearly a skill or tech term
+                    if any(term in name_clean for term in COMMON_NON_NAMES):
+                        continue
+
+                    # Skip if it's unusually long or short
+                    if not (2 <= len(name_candidate.split()) <= 4):
+                        continue
+
+                    # Skip if it contains digits or symbols
+                    if re.search(r"[\d@\-_/]", name_candidate):
+                        continue
+
+                    return name_candidate, email
+
 
         except Exception as e:
             print("spaCy name extraction failed for .doc:", e)
