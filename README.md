@@ -45,7 +45,7 @@ Each candidate receives a detailed score breakdown and justification for how wel
 ### Secure and Modular Architecture
 - Separate backend and parser services improve maintainability and fault isolation.
 
-## Flow
+## Workflow
 1. A recruiter uploads a candidate’s resume through the frontend.  
 2. The backend sends the resume to the parser service.  
 3. The parser extracts relevant text, analyzes it using OpenAI, computes weighted scores, and stores the results in the database.  
@@ -148,12 +148,6 @@ http://localhost:5173
   
 ### Error Handling
 - If OpenAI returns invalid JSON or fails, fallback scoring (neutral 0.5 per criterion) is used to maintain continuity.
-
-## Workflow
-- A candidate’s resume is uploaded.
-- The backend forwards the file to /process on the parser service.
-- The parser extracts the resume text, candidate name, and email, then queries the job criteria, calls OpenAI for scoring, and finally saves all results including subscores, reasons, total score, and justification to the candidates table.
-- The frontend displays the parsed resume data and the computed AI score.
 
 ## Development Challenges
 1. Multi-Service Coordination
