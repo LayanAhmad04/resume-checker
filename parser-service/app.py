@@ -6,6 +6,7 @@ import spacy
 import psycopg2
 from config import DB_DSN, OPENAI_KEY, PARSER_PORT
 from openai import OpenAI
+import pypandoc
 
 client = OpenAI(api_key=OPENAI_KEY)
 nlp = spacy.load("en_core_web_sm")
@@ -30,104 +31,77 @@ def extract_text_from_docx(path):
 
 def extract_text(path):
     try:
+        import os
+
         low = path.lower()
         if low.endswith(".pdf"):
             import fitz
             doc = fitz.open(path)
             return "\n".join([p.get_text() or "" for p in doc])
+
         elif low.endswith(".docx"):
             import docx
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
+
         elif low.endswith(".doc"):
-            import mammoth
-            try:
-                with open(path, "rb") as doc_file:
-                    result = mammoth.extract_raw_text(doc_file)
-                    return result.value
-            except Exception as e:
-                print("mammoth failed:", e)
-                return ""
+            import pypandoc
+            # Convert .doc → plain text using pypandoc
+            text = pypandoc.convert_text("", to="plain", format="doc", outputfile=None, extra_args=["--from=doc", path])
+            # The above line ensures conversion is done properly — if it fails, try fallback
+            if not text.strip():
+                # fallback: convert to docx then extract
+                temp_docx = os.path.splitext(path)[0] + "_converted.docx"
+                pypandoc.convert_file(path, "docx", outputfile=temp_docx)
+                import docx
+                doc = docx.Document(temp_docx)
+                text = "\n".join([p.text for p in doc.paragraphs if p.text])
+            return text
+
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
+
     except Exception as e:
         print("extract_text error:", e)
         return ""
 
 
+
 def clean_rtf(text):
-    """Remove basic RTF control sequences and braces, collapse whitespace."""
-    if not text:
-        return text
-    # remove common RTF control words like \b, \par, \fs24, etc. and braces
-    cleaned = re.sub(r"\\[a-zA-Z]+\d*'?[a-zA-Z0-9]*|[{}]|\\'", " ", text)
-    # replace multiple non-letter runs with a single space (but keep dots for initials)
-    cleaned = re.sub(r"[^A-Za-z\.\s]+", " ", cleaned)
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    return cleaned
+    """Remove basic RTF control sequences and braces."""
+    return re.sub(r"\\[a-z]+\d*|[{}]", "", text)
 
 
 # name and email extraction
 def extract_name_email(text):
-    # pre-clean RTF artifacts to make heuristics reliable (harmless for non-RTF)
-    cleaned_text = clean_rtf(text)
-
-    emails = re.findall(r"[\w\.-]+@[\w\.-]+", cleaned_text)
+    emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-    lines = [l.strip() for l in cleaned_text.splitlines() if l.strip()]
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
     def clean_line(line):
-        # keep letters, spaces and dots (for initials)
-        return re.sub(r"[^A-Za-z\.\s]", "", line).strip()
+        return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
-    # 1) ALL CAPS line (common in resumes)
     for line in lines[:20]:
         cline = clean_line(line)
-        # consider uppercase lines that contain letters and spaces and at least 2 words
-        if cline and re.match(r"^[A-Z\.\s]{3,}$", cline) and 2 <= len(cline.split()) <= 5:
+        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
             candidate_name = cline.title()
             break
 
-    # 2) Title case name like "Alex Morgan" or "Alex R. Morgan"
     if not candidate_name:
-        for line in lines[:20]:
+        for line in lines[:15]:
             cline = clean_line(line)
-            if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z]\.?|(?:\s+[A-Z][a-z]+))+", cline):
-                # take first reasonable-looking title-case line
-                parts = cline.split()
-                if 2 <= len(parts) <= 5:
-                    candidate_name = cline
-                    break
+            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
+                candidate_name = cline
+                break
 
-    # 3) Before-email heuristic (text immediately before email often contains name/phone)
     if not candidate_name and email:
-        before_email = cleaned_text.split(email)[0]
-        # take last 200 chars before the email and search
-        ctx = before_email[-300:]
-        # look for a Name pattern in that chunk
-        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)", ctx)
+        before_email = text.split(email)[0]
+        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
         if match:
-            candidate_name = match.group(1).strip()
-
-    # 4) spaCy PERSON entity fallback — helpful on messy text where simple heuristics fail
-    if not candidate_name:
-        try:
-            doc = nlp(cleaned_text[:5000])  # limit length for speed
-            for ent in doc.ents:
-                if ent.label_ == "PERSON":
-                    name_candidate = ent.text.strip()
-                    # basic validation: at least two tokens and alphabetic characters
-                    tokens = [t for t in name_candidate.split() if re.search(r"[A-Za-z]", t)]
-                    if len(tokens) >= 2 and 2 <= len(tokens) <= 5:
-                        # strip weird chars, keep dots (initials)
-                        candidate_name = re.sub(r"[^A-Za-z\.\s]", "", name_candidate).strip()
-                        break
-        except Exception:
-            # don't crash on spaCy errors — leave candidate_name as None
-            pass
+            candidate_name = match.group(1)
 
     return candidate_name, email
 
