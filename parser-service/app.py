@@ -40,10 +40,8 @@ def extract_text(path):
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
         elif low.endswith(".doc"):
-            # read raw bytes, decode, then clean RTF/control chars
             with open(path, "rb") as f:
-                raw_text = f.read().decode("utf-8", errors="ignore")
-            return clean_rtf(raw_text)
+                return f.read().decode("utf-8", errors="ignore")
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
@@ -58,52 +56,64 @@ def clean_rtf(text):
 
 
 # name and email extraction
-def extract_name_email(text):
-    # --- 1️⃣ Extract email ---
+def extract_name_email(text, file_ext=None):
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-    # --- 2️⃣ Split lines and clean ---
+    if file_ext and file_ext.lower().endswith(".doc"):
+        try:
+            text = re.sub(
+                r"(?i)\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b",
+                "",
+                text,
+            )
+
+            text = re.sub(
+                r"(?i)(?:[;:\s]*\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b[;:\s]*)+",
+                " ",
+                text,
+            )
+
+            text = re.sub(r"\s{2,}", " ", text).strip()
+
+            lines = [l.strip() for l in text.splitlines() if l.strip()]
+            clean_text = "\n".join(lines[:30])
+
+            doc = nlp(clean_text)
+            for ent in doc.ents:
+                if ent.label_ == "PERSON" and 2 <= len(ent.text.split()) <= 4:
+                    return ent.text.strip(), email
+
+        except Exception as e:
+            print("spaCy name extraction failed for .doc:", e)
+        print("spaCy name not found, using fallback heuristic")
+
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     candidate_name = None
 
     def clean_line(line):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
-    # skip font/metadata lines
-    skip_keywords = r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b"
-    stop_keywords = r"\b(?:Phone|Email|LinkedIn|CV|Resume|Profile)\b"
-
     for line in lines[:20]:
-        if re.search(skip_keywords, line, re.IGNORECASE):
-            continue  # skip font names
-        if re.search(stop_keywords, line, re.IGNORECASE):
-            break
-
         cline = clean_line(line)
-        if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$", cline):
-            candidate_name = cline
+        if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
+            candidate_name = cline.title()
             break
 
-    # fallback: spaCy PERSON detection on first 40 lines
     if not candidate_name:
-        doc = nlp(" ".join(lines[:40]))
-        for ent in doc.ents:
-            if ent.label_ == "PERSON":
-                name = ent.text.strip()
-                if len(name.split()) <= 4 and all(w[0].isupper() for w in name.split()):
-                    candidate_name = name
-                    break
+        for line in lines[:15]:
+            cline = clean_line(line)
+            if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
+                candidate_name = cline
+                break
 
-    # fallback #2: look before email
     if not candidate_name and email:
         before_email = text.split(email)[0]
-        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})", before_email)
+        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
         if match:
             candidate_name = match.group(1)
 
     return candidate_name, email
-
 
 # database connection
 def db_connect():
@@ -253,7 +263,7 @@ def process():
     else:
         return jsonify({"error": "no fileData or textData provided"}), 400
 
-    name, email = extract_name_email(text)
+    name, email = extract_name_email(text, filename)
 
 
     conn = db_connect()
