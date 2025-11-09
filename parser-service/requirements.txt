@@ -8,3 +8,4 @@ tqdm
 python-dotenv
 spacy
 ftfy
+mammoth

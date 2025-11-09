@@ -40,8 +40,14 @@ def extract_text(path):
             doc = docx.Document(path)
             return "\n".join([p.text for p in doc.paragraphs if p.text])
         elif low.endswith(".doc"):
-            with open(path, "rb") as f:
-                return f.read().decode("utf-8", errors="ignore")
+            import mammoth
+            try:
+                with open(path, "rb") as doc_file:
+                    result = mammoth.extract_raw_text(doc_file)
+                    return result.value
+            except Exception as e:
+                print("mammoth failed:", e)
+                return ""
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
