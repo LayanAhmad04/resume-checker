@@ -60,36 +60,15 @@ def extract_name_email(text):
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
-    candidate_name = None
-
-    def clean_line(line):
-        return re.sub(r"[^A-Za-z\s]", "", line).strip()
-
-    # Skip obvious font lines
-    skip_keywords = r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b"
-
-    # Stop at these keywords
-    stop_keywords = r"\b(?:Phone|Email|LinkedIn|CV|Resume)\b"
-
-    for line in lines[:20]:
-        if re.search(skip_keywords, line, re.IGNORECASE):
-            continue
-        if re.search(stop_keywords, line, re.IGNORECASE):
-            break  # stop before reaching phone/email/linkedin
-        cline = clean_line(line)
-        if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z]\.?[a-z]*){1,3}$", cline):
-            candidate_name = cline
+    doc = nlp(text)
+    name = None
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":
+            name = ent.text
             break
 
-    # fallback: look before email
-    if not candidate_name and email:
-        before_email = text.split(email)[0]
-        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
-        if match:
-            candidate_name = match.group(1)
+    return name, email
 
-    return candidate_name, email
 
 
 
