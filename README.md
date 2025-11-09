@@ -3,7 +3,7 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
-- [Flow](#flow)
+- [Workflow](#flow)
 - [Setup and Installation](#setup-and-installation)
   - [1. Backend Setup](#1-backend-setup)
   - [2. Parser Service Setup](#2-parser-service-setup)
