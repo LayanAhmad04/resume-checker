@@ -67,7 +67,7 @@ def extract_name_email(text):
         return re.sub(r"[^A-Za-z\s]", "", line).strip()
 
     for line in lines[:20]:
-        if re.search(r"\b(?:Calibri|Arial|Times New Roman|Courier|Font|Bold|Italic)\b", line, re.IGNORECASE):
+        if re.search(r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b", line, re.IGNORECASE):
             continue  
         cline = clean_line(line)
         if re.match(r"^[A-Z\s]{3,}$", cline) and 2 <= len(cline.split()) <= 4:
@@ -77,10 +77,13 @@ def extract_name_email(text):
 
     if not candidate_name:
         for line in lines[:15]:
+            if re.search(r"\b(?:calibri|arial|times new roman|courier|font|bold|italic)\b", line, re.IGNORECASE):
+                continue
             cline = clean_line(line)
             if re.match(r"^[A-Z][a-z]+\s+[A-Z][a-z]+", cline):
                 candidate_name = cline
                 break
+
 
     if not candidate_name and email:
         before_email = text.split(email)[0]
