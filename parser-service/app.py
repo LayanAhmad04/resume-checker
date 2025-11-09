@@ -4,9 +4,9 @@ import fitz
 import docx
 import spacy
 import psycopg2
-import textract
 from config import DB_DSN, OPENAI_KEY, PARSER_PORT
 from openai import OpenAI
+import mammoth
 
 client = OpenAI(api_key=OPENAI_KEY)
 nlp = spacy.load("en_core_web_sm")
@@ -28,6 +28,11 @@ def extract_text_from_docx(path):
     doc = docx.Document(path)
     return "\n".join([p.text for p in doc.paragraphs if p.text])
 
+def extract_doc_text(file_path):
+    with open(file_path, "rb") as doc_file:
+        result = mammoth.extract_raw_text(doc_file)
+        text = result.value
+        return text
 
 def extract_text(path):
     try:
@@ -37,8 +42,9 @@ def extract_text(path):
         elif low.endswith(".docx"):
             return extract_text_from_docx(path)
         elif low.endswith(".doc"):
-            text = textract.process(path).decode("utf-8", errors="ignore")
-            return text
+            with open(path, "rb") as doc_file:
+                result = mammoth.extract_raw_text(doc_file)
+                return result.value
         else:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
