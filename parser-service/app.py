@@ -57,30 +57,27 @@ def clean_rtf(text):
 
 # name and email extraction
 def extract_name_email(text, file_ext=None):
-    """
-    Extract candidate name and email from resume text.
-    Uses a spaCy NER extractor for .doc files (after cleaning),
-    and heuristic pattern matching for PDF/DOCX files.
-    """
     emails = re.findall(r"[\w\.-]+@[\w\.-]+", text)
     email = emails[0] if emails else None
 
-
     if file_ext and file_ext.lower().endswith(".doc"):
         try:
-
-            font_cleanup = re.sub(
-                r"(?i)(?:\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b\s*;?\s*)+",
+            text = re.sub(
+                r"(?i)\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b",
                 "",
                 text,
             )
 
-            lines = [l.strip() for l in font_cleanup.splitlines() if l.strip()]
-            cleaned_lines = []
-            for line in lines:
-                if not re.match(r"(?i)^(?:[A-Za-z]+\s*;){2,}", line):
-                    cleaned_lines.append(line)
-            clean_text = "\n".join(cleaned_lines)
+            text = re.sub(
+                r"(?i)(?:[;:\s]*\b(?:calibri|arial|times new roman|cambria|courier new|verdana|tahoma|georgia|helvetica)\b[;:\s]*)+",
+                " ",
+                text,
+            )
+
+            text = re.sub(r"\s{2,}", " ", text).strip()
+
+            lines = [l.strip() for l in text.splitlines() if l.strip()]
+            clean_text = "\n".join(lines[:30])
 
             doc = nlp(clean_text)
             for ent in doc.ents:
@@ -117,7 +114,6 @@ def extract_name_email(text, file_ext=None):
             candidate_name = match.group(1)
 
     return candidate_name, email
-
 
 # database connection
 def db_connect():
