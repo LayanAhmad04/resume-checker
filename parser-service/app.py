@@ -27,6 +27,7 @@ def extract_text_from_docx(path):
     doc = docx.Document(path)
     return "\n".join([p.text for p in doc.paragraphs if p.text])
 
+
 def extract_text(path):
     try:
         low = path.lower()
@@ -48,6 +49,10 @@ def extract_text(path):
         print("extract_text error:", e)
         return ""
 
+
+def clean_rtf(text):
+    """Remove basic RTF control sequences and braces."""
+    return re.sub(r"\\[a-z]+\d*|[{}]", "", text)
 
 
 # name and email extraction
@@ -74,6 +79,12 @@ def extract_name_email(text):
                 candidate_name = cline
                 break
 
+    if not candidate_name and email:
+        before_email = text.split(email)[0]
+        match = re.search(r"([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)", before_email)
+        if match:
+            candidate_name = match.group(1)
+
     return candidate_name, email
 
 
@@ -86,6 +97,7 @@ def db_connect():
         password=DB_DSN["password"],
         dbname=DB_DSN["database"],
     )
+
 
 # openAI scoring logic
 def call_openai_subscores_and_justification(job_description: str, resume_text: str, criteria: dict):
@@ -147,7 +159,7 @@ Normalized weights:
             ],
             temperature=0.0,
             max_tokens=700,
-            seed=42  
+            seed=42
         )
 
         txt = response.choices[0].message.content
@@ -185,6 +197,7 @@ Normalized weights:
             "Fallback justification: OpenAI failed or invalid response.",
         )
 
+
 # main parser endpoint
 @app.route("/process", methods=["POST"])
 def process():
@@ -193,22 +206,26 @@ def process():
     candidateId = data.get("candidateId")
     filename = data.get("filename")
     file_data = data.get("fileData")
-    text_data = data.get("textData")  
+    text_data = data.get("textData")
 
     if not (jobId and candidateId and filename):
         return jsonify({"error": "missing parameters"}), 400
 
     text = ""
 
-    if text_data:  
+    if text_data:
         text = text_data
         print(f"Processing candidate {candidateId} using raw_text input")
-    elif file_data:  
+    elif file_data:
         try:
             temp_path = os.path.join(tempfile.gettempdir(), filename)
             with open(temp_path, "wb") as f:
                 f.write(base64.b64decode(file_data))
             text = extract_text(temp_path)
+
+            if filename.lower().endswith(".doc"):
+                text = clean_rtf(text)
+
         except Exception as e:
             return jsonify({"error": "failed to decode file", "details": str(e)}), 400
         finally:
@@ -220,11 +237,6 @@ def process():
         return jsonify({"error": "no fileData or textData provided"}), 400
 
     name, email = extract_name_email(text)
-
-    try:
-        os.remove(filePathResolved)
-    except Exception:
-        pass
 
     conn = db_connect()
     cur = conn.cursor()
